@@ -182,7 +182,3 @@ def i18n(keyword = None):
         return get('i18nkey', keyword)
     return get('i18n')
 
-if __name__ == '__main__':
-    import unittest
-    testsuite = unittest.TestLoader().discover('./tests/')
-    unittest.TextTestRunner(verbosity=1).run(testsuite)
