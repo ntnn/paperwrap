@@ -30,7 +30,6 @@ api_path = {
         'i18nkey':     'i18n/{}'
         }
 
-#help functions
 def b64(string):
     """Returns given string as base64 hash."""
     return b64encode(string.encode('UTF-8')).decode('ASCII')
@@ -64,7 +63,6 @@ def request(data, method, keyword, *args):
     except Exception as e:
         logger.error(e)
 
-#convenience methods
 def get(keyword, *args):
     """Convenience wrapper for GET request."""
     return request(None, 'GET', keyword, *args)
@@ -81,7 +79,6 @@ def delete(keyword, *args):
     """Convenience wrapper for DELETE request."""
     return request(None, 'DELETE', keyword, *args)
 
-#notebook methods
 def list_notebooks():
     """Return all notebooks in a list."""
     return get('notebooks')
