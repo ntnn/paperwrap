@@ -1,3 +1,6 @@
+#License: MIT
+#Author: Nelo Wallus, http://github.com/ntnn
+
 from urllib.request import Request, urlopen
 from urllib.parse import urlencode
 from base64 import b64encode
