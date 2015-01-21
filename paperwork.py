@@ -6,7 +6,7 @@ import json
 
 logger = logging.getLogger('paperwork-wrapper')
 
-host = 'http://private-anon-5628c28c7-paperwork.apiary-proxy.com'
+host = None
 api = '/api/v1/'
 
 headers = None
