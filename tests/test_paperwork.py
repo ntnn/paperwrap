@@ -69,9 +69,9 @@ class TestPaperwork(unittest.TestCase):
         self.assertEqual(nb.id, self.notebook1['id'])
         self.assertEqual(nb.title, self.notebook1['title'])
 
-    @patch('wrapper.list_tags')
-    @patch('wrapper.list_notebooks')
-    @patch('wrapper.list_notebook_notes')
+    @patch('wrapper.api.list_tags')
+    @patch('wrapper.api.list_notebooks')
+    @patch('wrapper.api.list_notebook_notes')
     def test_download(self, mocked_list_tags, mocked_list_notebooks, mocked_list_notebook_notes):
         mocked_list_tags.return_value( [self.tag1, self.tag2] )
         mocked_list_notebooks( [self.notebook1, self.notebook2] )
@@ -81,8 +81,8 @@ class TestPaperwork(unittest.TestCase):
         mocked_list_notebooks.assert_called()
         mocked_list_notebook_notes.assert_called()
 
-    @patch('wrapper.update_notebook')
-    @patch('wrapper.update_note')
+    @patch('wrapper.api.update_notebook')
+    @patch('wrapper.api.update_note')
     def test_upload(self, mocked_update_notebook, mocked_update_note):
         nb = self.pw.parse_json(self.notebook1)
         self.pw.add_notebook(nb)

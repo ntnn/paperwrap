@@ -11,8 +11,7 @@ class Paperwork:
     def __init__(self, user, passwd, host = 'http://demo.paperwork.rocks/'):
         self.notebooks = set()
         self.tags = set()
-        self.api = wrapper
-        self.api.initialize(user, passwd, host)
+        self.api = wrapper.api(user, passwd, host)
 
     def add_notebook(self, notebook):
         """Add a notebook to the paperwork instance."""
