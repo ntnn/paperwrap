@@ -35,8 +35,8 @@ def b64(string):
     return b64encode(string.encode('UTF-8')).decode('ASCII')
 
 class api:
-    def __init__(self, user, passwd, uri, user_agent = user_agent):
-        self.host = uri
+    def __init__(self, user, passwd, uri = 'http://demo.paperwork.rocks/', user_agent = user_agent):
+        self.host = uri if not 'http://' in uri else 'http://' + uri
         self.headers = {
                 'Application-Type': 'application/json',
                 'Content-Type': 'application/json',
