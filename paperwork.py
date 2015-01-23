@@ -14,18 +14,20 @@ class Paperwork:
         self.api = wrapper.api(user, passwd, host)
 
     def add_notebook(self, notebook):
-        """Add a notebook to the paperwork instance."""
+        """Add a notebook to the paperwork instance. Returns notebook instance."""
         if isinstance(notebook, str):
             notebook = Notebook(notebook)
         logger.info('Added notebook {}'.format(notebook))
         self.notebooks.add(notebook)
+        return notebook
 
     def add_tag(self, tag):
-        """Add a tag to the paperwork instance."""
+        """Add a tag to the paperwork instance. Return tag instance."""
         if isinstance(tag, str):
             tag = Tag(tag)
         logger.info('Added tag {}'.format(tag))
         self.tags.add(tag)
+        return tag
 
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
