@@ -116,9 +116,27 @@ class Paperwork:
 
         logger.info('Writing notebooks')
         for nb in self.notebooks:
-            self.api.update_notebook(nb.to_json())
+
+            # Do note write 'All Notes' notebook
+            # TODO (Nelo Wallus): nb.id should be used
+            if 'All Notes' in nb.title:
+                logger.info('Not writing notebook {}'.format(nb))
+                continue
+
+            logger.info('Writing notebook {}'.format(nb))
+            path = os.path.join(folder, nb.title)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            logger.info('Writing id file')
+            with open(os.path.join(path, '.id'), 'w') as f:
+                f.write(str(nb.id))
+
             for note in nb.notes:
-                self.api.update_note(note.to_json())
+                logger.info('Writing note {}'.format(note))
+                with open(os.path.join(path, note.title), 'w') as f:
+                    f.write('id:{}\ntags:{}\n{}'.format(note.id, note.string_tags(), note.content))
+
 
     def find_tag(self, key):
         """Finds tag with key."""
