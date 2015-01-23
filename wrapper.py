@@ -164,17 +164,6 @@ class api:
         """Returns tag with tag_id."""
         return self.get('tag', tag_id)
 
-    # Not yet implemented
-    # def create_tag(self, tag):
-    #     return self.post(tag, 'tag', tag['id'])
-    #
-    # def update_tag(self, tag):
-    #     return self.put(tag, 'tag', tag['id'])
-    #
-    # def remove_tag(self, tag_id):
-    #     return self.delete('tag', tag_id)
-    # End not yet implemented
-
     def list_tagged(self, tag_id):
         """Returns notes tagged with tag."""
         return self.get('tagged', tag_id)
