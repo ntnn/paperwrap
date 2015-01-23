@@ -68,16 +68,18 @@ class Paperwork:
 
         logger.info('Downloading tags')
         for tag in self.api.list_tags():
-            self.add_tag(tag)
+            self.add_tag(self.parse_json(tag))
+
+        logger.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
-            self.add_notebook(notebook)
+            self.add_notebook(self.parse_json(notebook))
+
         for nb in self.notebooks:
             logger.info('Downloading notes of notebook {}'.format(nb))
             notes_json = self.api.list_notebook_notes(nb.id)
             for note_json in notes_json:
                 note = Note.from_json(note_json)
-                for tag in note_json['tags']:
-                    note.add_tag(self.find_tag(tag['title']))
+                note.add_tags( [ self.find_tag(tag['title']) for tag in note_json['tags'] ] )
                 nb.add_note(note)
 
     def upload(self):
@@ -123,6 +125,10 @@ class Paperwork:
         for tag in self.tags:
             if key in (tag.id, tag.title):
                 return tag
+
+    def find_or_create_tag(self, key):
+        """Return tag if found, else return new tag instance."""
+        return self.find_tag(key) or self.add_tag(Tag(key))
 
     def find_notebook(self, key):
         """Find notebook by id."""
