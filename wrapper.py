@@ -9,7 +9,7 @@ import json
 
 logger = logging.getLogger('paperwork-wrapper')
 
-api = '/api/v1/'
+api_version = '/api/v1/'
 user_agent = 'paperwork.py v0.1 by ntnn'
 
 api_path = {
@@ -36,7 +36,7 @@ def b64(string):
 
 class api:
     def __init__(self, user, passwd, uri = 'http://demo.paperwork.rocks/', user_agent = user_agent):
-        self.host = uri if not 'http://' in uri else 'http://' + uri
+        self.host = uri if 'http://' in uri else 'http://' + uri
         self.headers = {
                 'Application-Type': 'application/json',
                 'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ class api:
         """Sends a request to the host and returns the parsed json data if successfull."""
         try:
             data = json.dumps(data).encode('ASCII')
-            uri = self.host + api + api_path[keyword].format(*args)
+            uri = self.host + api_version + api_path[keyword].format(*args)
             request = Request(uri, data, self.headers)
             request.method = method
             logger.info('{} request to {} with {}'.format(method, uri, data))
