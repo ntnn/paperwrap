@@ -2,6 +2,8 @@ language: python
 python:
   - "3.4"
   - "3.3"
+  - "3.2"
+  - "3.0"
 branches:
   only:
     - master
@@ -9,4 +11,4 @@ notifications:
     email:
         on_failure: always
         on_success: never
-script: python paperwork.py
+script: python -m unittest discover

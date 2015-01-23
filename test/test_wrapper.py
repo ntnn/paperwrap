@@ -2,7 +2,7 @@
 #Author: Nelo Wallus, http://github.com/ntnn
 import unittest
 from unittest.mock import call, patch
-import wrapper
+from paperworks import wrapper
 from json import dumps, loads
 import tempfile
 
@@ -160,7 +160,7 @@ ret = {
 class TestRequests(unittest.TestCase):
     def setUp(self):
         self.api = wrapper.api(user, passwd, uri, agent)
-        self.patcher = patch('wrapper.urlopen')
+        self.patcher = patch('paperworks.wrapper.urlopen')
         self.mocked_urlopen = self.patcher.start()
 
     def tearDown(self):
@@ -186,6 +186,8 @@ class TestRequests(unittest.TestCase):
         self.mocked_urlopen.return_value = temp
 
         response = function(*args)
+
+        temp.close()
 
         self.mocked_urlopen.assert_called()
         self.assertEqual(response, ret[keyword])

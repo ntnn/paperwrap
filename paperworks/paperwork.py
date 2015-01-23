@@ -1,8 +1,8 @@
 #License: MIT
 #Author: Nelo Wallus, http://github.com/ntnn
 
-import wrapper
-from models import *
+from paperworks import wrapper
+from paperworks.models import *
 import logging
 import os
 import json
@@ -185,8 +185,3 @@ class Paperwork:
         for notebook in self.notebooks:
             if key in (notebook.id, notebook.title):
                 return notebook
-
-if __name__ == '__main__':
-    import unittest
-    testsuite = unittest.TestLoader().discover('./tests/')
-    unittest.TextTestRunner(verbosity=1).run(testsuite)

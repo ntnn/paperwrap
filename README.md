@@ -3,7 +3,7 @@
 [paperwork](https://github.com/twostairs/paperwork) is 'an open source note-taking and archiving tool'.
 
 Python3 is required.  
-Tests can be run with `python3 paperworks.py`.
+Tests can be run with `python3 -m unittest discover`.
 
 `wrapper.py` is the actual api-wrapper.  
 `models.py` contains classes for noteboooks, notes and tags.  
