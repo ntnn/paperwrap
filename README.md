@@ -5,7 +5,7 @@
 Python3 is required.  
 Tests can be run with `python3 -m unittest discover`.
 
-PyPI entry: [paperworks](https://pypi.python.org/pypi/paperworks/0.1a1) 
+PyPI entry: [paperworks](https://pypi.python.org/pypi/paperworks/) 
 
 `wrapper.py` is the actual api-wrapper.  
 `models.py` contains classes for noteboooks, notes and tags.  
