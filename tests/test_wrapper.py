@@ -31,7 +31,16 @@ class TestRequests(unittest.TestCase):
                     { 'id': self.version_id }
                     ]
                 }
+
         self.tag_id = '34'
+        self.tag_title = 'some_tag'
+
+        self.tag = {
+                'id': self.tag_id,
+                'title': self.tag_title,
+                'visibility': 0
+                }
+
         self.keyword = 'test keyword'
         self.keyword_b64 = 'dGVzdCBrZXl3b3Jk'
 
