@@ -1,5 +1,5 @@
 import unittest
-import models
+from paperwork import models
 
 class TestModel(unittest.TestCase):
     def setUp(self):
