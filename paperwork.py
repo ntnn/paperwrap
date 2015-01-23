@@ -4,6 +4,8 @@
 import wrapper
 from models import *
 import logging
+import os
+import json
 
 logger = logging.getLogger('paperwork')
 
@@ -79,7 +81,7 @@ class Paperwork:
             notes_json = self.api.list_notebook_notes(nb.id)
             for note_json in notes_json:
                 note = Note.from_json(note_json)
-                note.add_tags( [ self.find_tag(tag['title']) for tag in note_json['tags'] ] )
+                note.add_tags( [ self.find_or_create_tag(tag['title']) for tag in note_json['tags'] ] )
                 nb.add_note(note)
 
     def upload(self):
@@ -137,6 +139,39 @@ class Paperwork:
                 with open(os.path.join(path, note.title), 'w') as f:
                     f.write('id:{}\ntags:{}\n{}'.format(note.id, note.string_tags(), note.content))
 
+    def read_paperwork_from_disk(self, folder = 'paperwork'):
+        """Read tags, notebooksand notes from disk."""
+        logger.info('Reading paperwork from disk')
+
+        logger.info('Reading notebook folders')
+        nb_folders = os.listdir(folder)
+
+        if '.tags' in nb_folders:
+            logger.info('Reading tags file')
+            with open(os.path.join(folder, '.tags'), 'r') as f:
+                for tag in json.loads(f.read()):
+                    self.add_tag(self.parse_json_tag(tag))
+            nb_folders.remove('.tags')
+
+        for nb_folder in nb_folders:
+            logger.info('Reading notebook folder {}'.format(nb_folder))
+            path = os.path.join(folder, nb_folder)
+            nb_files = os.listdir(path)
+
+            if '.id' in nb_files:
+                logger.info('Reading id file')
+                with open(path + '/.id', 'r') as f:
+                    nb_id = f.read()
+                nb_files.remove('.id')
+            else:
+                nb_id = 0
+            nb = self.add_notebook(Notebook(nb_folder, nb_id))
+
+            logger.info('Reading notes')
+            for note_file in nb_files:
+                logger.info('Reading note {}'.format(note_file))
+                with open(os.path.join(folder, nb_folder, note_file), 'r') as f:
+                    nb.add_note(Note.from_file(f, self))
 
     def find_tag(self, key):
         """Finds tag with key."""
