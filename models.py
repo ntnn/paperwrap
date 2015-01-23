@@ -46,7 +46,7 @@ class Notebook(Model):
 
     def add_note(self, note):
         """Adds note to notebook. Sets reference to notebook in note."""
-        logger.info('Adding note {}:{} to notebook {}:{}'.format(note.id, note.title, self.id, self.title))
+        logger.info('Adding note {} to notebook {}'.format(note, self))
         note.notebook = self
         self.notes.add(note)
 
@@ -77,7 +77,7 @@ class Note(Model):
 
     def add_tag(self, tag):
         """Adds tag to note. Sets reference to note in tag."""
-        logger.info('Adding tag {}:{} to note {}:{}'.format(tag.id, tag.title, self.id, self.title))
+        logger.info('Adding tag {} to note {}'.format(tag, self))
         tag.notes.add(self)
         self.tags.add(tag)
 
