@@ -38,6 +38,7 @@ class TestRequests(unittest.TestCase):
         self.user = 'testuser'
         self.passwd = 'testpassword'
         self.uri = 'test/uri'
+        self.uri_correct = 'http://test/uri'
         self.agent = 'dummy agent'
         self.api = wrapper.api(self.user, self.passwd, self.uri, self.agent)
 
@@ -48,7 +49,7 @@ class TestRequests(unittest.TestCase):
         self.assertEqual(wrapper.b64(self.keyword), self.keyword_b64)
 
     def test_init(self):
-        self.assertEqual(self.api.host, self.uri)
+        self.assertEqual(self.api.host, self.uri_correct)
         self.assertEqual(self.api.headers['User-Agent'], self.agent)
         self.assertEqual(self.api.headers['Authorization'], 'Basic ' + wrapper.b64('{}:{}'.format(self.user, self.passwd)))
 
