@@ -75,6 +75,25 @@ class Note(Model):
                 json['content']
                 )
 
+    @classmethod
+    def from_file(cls, f, pw):
+        firstline = f.readline()
+        if 'id:' in firstline:
+            note_id = firstline.split(':')[1].strip('\n')
+            note_tags = f.readline().split(':')[1].strip('\n').split()
+            note_content = f.read()
+            tags = set( [ pw.find_or_create_tag(tag) for tag in note_tags ]   )
+        else:
+            note_id = 0
+            note_content = firstline + f.read()
+            tags = set()
+        return cls(
+                f.name.rsplit('/', 1)[1],
+                note_id,
+                note_content,
+                tags
+                )
+
     def add_tag(self, tag):
         """Adds tag to note. Sets reference to note in tag."""
         logger.info('Adding tag {} to note {}'.format(tag, self))
