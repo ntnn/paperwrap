@@ -5,7 +5,7 @@ python:
 branches:
   only:
     - master
-    - future
+    - development
 notifications:
     email:
         on_failure: always
