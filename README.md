@@ -1,7 +1,5 @@
 #paperwork python API wrapper  
-Branches: 
-Master [![Build Status](https://travis-ci.org/ntnn/paperwork.py.svg?branch=master)](https://travis-ci.org/ntnn/paperwork.py) 
-Future [![Build Status](https://travis-ci.org/ntnn/paperwork.py.svg?branch=future)](https://travis-ci.org/ntnn/paperwork.py)  
+Master [![Build Status](https://travis-ci.org/ntnn/paperwork.py.svg?branch=master)](https://travis-ci.org/ntnn/paperwork.py)  
 [paperwork](https://github.com/twostairs/paperwork) is 'an open source note-taking and archiving tool'.
 
 Python3 is required.  
