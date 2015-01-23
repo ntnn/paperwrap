@@ -52,11 +52,12 @@ class Notebook(Model):
 
 
 class Note(Model):
-    def __init__(self, title, id = 0, content = '', tags = set(), notebook = None):
+    def __init__(self, title, id = 0, content = '', tags = set()):
         super().__init__(title, id)
         self.content = content
-        self.tags = tags
-        self.notebook = notebook
+        # TODO (Nelo Wallus): This is ugly.
+        self.tags = set()
+        self.add_tags(tags)
 
     def to_json(self):
         return {
@@ -99,6 +100,17 @@ class Note(Model):
         logger.info('Adding tag {} to note {}'.format(tag, self))
         tag.notes.add(self)
         self.tags.add(tag)
+
+    def add_tags(self, tags):
+        """Adds multiple tags to note. Uses add_tag()."""
+        for tag in tags:
+            self.add_tag(tag)
+
+    def string_tags(self):
+        ret = ''
+        for tag in self.tags:
+            ret += tag.title + ' '
+        return ret
 
 class Tag(Model):
     def __init__(self, title, id = 0, visibility = 0, notes = set()):
