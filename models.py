@@ -10,6 +10,9 @@ class Model:
         self.id = id
         self.title = title
 
+    def __str__(self):
+        return "{}:'{}'".format(self.id, self.title)
+
     def to_json(self):
         """Return model as json-dict."""
         return {
