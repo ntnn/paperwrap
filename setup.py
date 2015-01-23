@@ -2,12 +2,13 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 import re
+import pypandoc
 
 here = path.abspath(path.dirname(__file__))
 package_name = 'paperworks'
 
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = pypandoc.convert(f.read(), 'rst', 'markdown_github')
 with open(path.join(here, package_name, 'wrapper.py')) as f:
     version = re.search("__version__ = '([^']+)'", f.read()).group(1)
 
