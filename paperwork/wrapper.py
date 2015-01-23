@@ -9,8 +9,9 @@ import json
 
 logger = logging.getLogger('paperwork-wrapper')
 
+__version__ = '0.1a1'
 api_version = '/api/v1/'
-user_agent = 'paperwork.py v0.1 by ntnn'
+user_agent = 'paperwork.py v{}'.format(__version__)
 
 api_path = {
         'notebooks':   'notebooks',
