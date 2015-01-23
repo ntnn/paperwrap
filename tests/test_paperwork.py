@@ -62,7 +62,6 @@ class TestPaperwork(unittest.TestCase):
         self.assertEqual(note.id, self.note1['id'])
         self.assertEqual(note.title, self.note1['title'])
         self.assertTrue(self.pw.find_tag(tag.title) in note.tags)
-        self.assertEqual(note.notebook.id, self.note1['notebook_id'])
 
     def test_parse_json_notebook(self):
         nb = self.pw.parse_json_notebook(self.notebook1)
