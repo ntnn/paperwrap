@@ -2,8 +2,6 @@ language: python
 python:
   - "3.4"
   - "3.3"
-  - "3.2"
-  - "3.0"
 branches:
   only:
     - master
