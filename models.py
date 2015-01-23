@@ -29,9 +29,9 @@ class Model:
                 )
 
 class Notebook(Model):
-    def __init__(self, title, id = 0, notes = set()):
+    def __init__(self, title, id = 0):
         super().__init__(title, id)
-        self.notes = notes
+        self.notes = set()
 
     def to_json(self):
         return {
