@@ -55,8 +55,7 @@ class Paperwork:
                 json['title'],
                 json['id'],
                 json['content'],
-                tags,
-                self.find_notebook(json['notebook_id'])
+                tags
                 )
 
     def parse_json_notebook(self, json):
@@ -87,8 +86,6 @@ class Paperwork:
     def upload(self):
         """Uploading notebooks and notes to host."""
         logger.info('Uploading all')
-        for tag in self.tags:
-            self.api.create_tag(tag.to_json())
         for nb in self.notebooks:
             if 'All Notes' in nb.title:
                 logger.info('Not uploading notebook {}'.format(nb))
