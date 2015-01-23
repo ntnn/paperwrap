@@ -4,7 +4,7 @@ from os import path
 import re
 
 here = path.abspath(path.dirname(__file__))
-package_name = 'paperwork'
+package_name = 'paperworks'
 
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()

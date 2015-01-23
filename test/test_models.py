@@ -1,5 +1,5 @@
 import unittest
-from paperwork import models
+from paperworks import models
 
 class TestModel(unittest.TestCase):
     def setUp(self):
@@ -81,7 +81,3 @@ class TestTag(TestModel):
 
     def test_to_json(self):
         self.to_json_test(models.Tag(self.title, self.id).to_json())
-
-
-if __name__ == "__main__":
-    unittest.main()

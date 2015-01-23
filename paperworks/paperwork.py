@@ -1,8 +1,8 @@
 #License: MIT
 #Author: Nelo Wallus, http://github.com/ntnn
 
-from paperwork import wrapper
-from paperwork.models import *
+from paperworks import wrapper
+from paperworks.models import *
 import logging
 import os
 import json
