@@ -1,6 +1,3 @@
-#License: MIT
-#Author: Nelo Wallus, http://github.com/ntnn
-
 from paperworks import wrapper
 import logging
 import os
@@ -237,6 +234,9 @@ class Paperwork:
         tag.pw = self
         self.tags.add(tag)
         return tag
+
+    def get_notes(self):
+        return [ note for notebook in self.notebooks for note in notebook.notes ]
 
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""

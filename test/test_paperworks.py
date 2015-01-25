@@ -309,6 +309,19 @@ class TestPaperwork(unittest.TestCase):
         self.assertTrue(mocked_update_note.called)
         self.assertTrue(mocked_update_notebook.called)
 
+    def test_get_notes(self):
+        n = models.Note.from_json(note)
+        n2 = models.Note.from_json(note2)
+        nb = models.Notebook.from_json(notebook)
+        nb.add_note(n)
+        nb2 = models.Notebook.from_json(notebook2)
+        nb2.add_note(n2)
+        self.pw.add_notebook(nb)
+        self.pw.add_notebook(nb2)
+        nb_notes = self.pw.get_notes()
+        self.assertTrue(n in nb_notes)
+        self.assertTrue(n2 in nb_notes)
+
 class TestModel(unittest.TestCase):
     def setUp(self):
         self.pw = models.Paperwork(user, passwd)
