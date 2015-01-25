@@ -281,7 +281,7 @@ class TestRequests(unittest.TestCase):
 
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
-        self.pw = paperwork.Paperwork(user, passwd)
+        self.pw = models.Paperwork(user, passwd)
 
     def tearDown(self):
         pass
@@ -311,7 +311,7 @@ class TestPaperwork(unittest.TestCase):
 
 class TestModel(unittest.TestCase):
     def setUp(self):
-        self.pw = paperwork.Paperwork(user, passwd)
+        self.pw = models.Paperwork(user, passwd)
 
     def tearDown(self):
         pass
