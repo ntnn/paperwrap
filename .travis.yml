@@ -2,6 +2,7 @@ language: python
 python:
     - "3.4"
     - "3.3"
+    - "2.7"
 branches:
   only:
     - master
@@ -11,6 +12,5 @@ notifications:
         on_failure: always
         on_success: never
 install:
-    - "pip install -r requirements.txt"
     - "pip install ."
 script: python -m unittest discover

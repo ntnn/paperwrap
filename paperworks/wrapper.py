@@ -49,10 +49,11 @@ class api:
     def request(self, data, method, keyword, *args):
         """Sends a request to the host and returns the parsed json data if successfull."""
         try:
-            data = json.dumps(data).encode('ASCII')
+            if data: #python2
+                data = json.dumps(data).encode('ASCII')
             uri = self.host + api_version + api_path[keyword].format(*args)
             request = Request(uri, data, self.headers)
-            request.method = method
+            request.get_method = lambda: method #python2
             logger.info('{} request to {} with {}'.format(method, uri, data))
             res = urlopen(request)
             json_res = json.loads(res.read().decode('ASCII'))
