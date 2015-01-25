@@ -6,9 +6,10 @@ import logging
 logger = logging.getLogger('models')
 
 class Model:
-    def __init__(self, title, id):
+    def __init__(self, title, id, paperwork = None):
         self.id = id
         self.title = title
+        self.pw = paperwork
 
     def __str__(self):
         return "{}:'{}'".format(self.id, self.title)
@@ -29,8 +30,8 @@ class Model:
                 )
 
 class Notebook(Model):
-    def __init__(self, title, id = 0):
-        super().__init__(title, id)
+    def __init__(self, title, id = 0, paperwork = None):
+        super().__init__(title, id, paperwork)
         self.notes = set()
 
     def to_json(self):
@@ -52,12 +53,13 @@ class Notebook(Model):
 
 
 class Note(Model):
-    def __init__(self, title, id = 0, content = '', tags = set()):
-        super().__init__(title, id)
+    def __init__(self, title, id = 0, content = '', tags = set(), paperwork = None, updated_at = ''):
+        super().__init__(title, id, paperwork)
         self.content = content
         # TODO (Nelo Wallus): This is ugly.
         self.tags = set()
         self.add_tags(tags)
+        self.updated_at = updated_at
 
     def to_json(self):
         return {
@@ -73,7 +75,8 @@ class Note(Model):
         return cls(
                 json['title'],
                 json['id'],
-                json['content']
+                json['content'],
+                updated_at = json['updated_at']
                 )
 
     @classmethod
@@ -113,8 +116,8 @@ class Note(Model):
         return ret
 
 class Tag(Model):
-    def __init__(self, title, id = 0, visibility = 0, notes = set()):
-        super().__init__(title, id)
+    def __init__(self, title, id = 0, visibility = 0, notes = set(), paperwork = None):
+        super().__init__(title, id, paperwork)
         self.visibility = visibility
         self.notes = notes
 
