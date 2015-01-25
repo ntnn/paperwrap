@@ -53,6 +53,39 @@ class Notebook(Model):
         self.notes.add(note)
         return note
 
+    def create_note(self, title, content = ''):
+        """Creates note with given title and adds it to the notebook. Returns note instance."""
+        return self.add_note(Note(title, content = content))
+
+    def delete_note(self, note):
+        """Deletes note from notebook."""
+        logger.info('Removing note {} to notebook {}'.format(note, self))
+        note.notebook = None
+        self.notes.discard(note)
+
+    def delete(self):
+        """Deletes notebook from remote host."""
+        if self.id == 0:
+            logger.error('Error while removing notebook {}'.format(self))
+        else:
+            self.pw.api.delete_notebook(self.id)
+
+    # TODO (Nelo Wallus): Default force to true when api
+    # response is fixed
+    def update(self, force = True):
+        """Updates local or remote notebook, depending on timestamp. Creates if notebook id is 0."""
+        if self.id == 0:
+            self.id = self.pw.api.create_notebook(self.title)['id']
+        else:
+            remote = self.pw.api.get_notebook(self.id)
+            if remote is None:
+                logger.error('Remote notebook could not be found. Wrong id or deleted.')
+            elif force or remote['updated_at'] < self.updated_at:
+                self.pw.api.update_notebook(self.to_json())
+            else:
+                logger.info('Remote version is higher. Updating local notebook.')
+                self.title = remote['title']
+                self.updated_at = remote['updated_at']
 
 class Note(Model):
     def __init__(self, title, id = 0, content = '', tags = set(), paperwork = None, updated_at = ''):
