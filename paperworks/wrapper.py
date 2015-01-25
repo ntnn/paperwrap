@@ -1,8 +1,11 @@
 #License: MIT
 #Author: Nelo Wallus, http://github.com/ntnn
 
-from urllib.request import Request, urlopen
-from urllib.parse import urlencode
+import sys
+if sys.version_info[:2][0] == 2:
+    from urllib2 import Request, urlopen
+else:
+    from urllib.request import Request, urlopen
 from base64 import b64encode
 import logging
 import json

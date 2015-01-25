@@ -2,11 +2,14 @@
 #Author: Nelo Wallus, http://github.com/ntnn
 import unittest
 from paperworks import paperwork, wrapper, models
-from unittest.mock import call, patch
 from json import dumps, loads
 import tempfile
 import sys
 
+if sys.version_info[:2][0] == 2:
+    from mock import call, patch
+else:
+    from unittest.mock import call, patch
 
 notebook_id = '1'
 notebook2_id = '2'
