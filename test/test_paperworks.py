@@ -410,8 +410,8 @@ class TestNote(TestModel):
         self.new_note = models.Note(note_title, paperwork = self.pw)
         self.old_note = models.Note(note_title, note_id, content, paperwork = self.pw)
         self.parsed_note = models.Note.from_json(note)
-        self.parsed_note.pw = self.pw
         models.Notebook.from_json(notebook).add_note(self.parsed_note)
+        self.parsed_note.pw = self.pw
         self.parsed_note_json = self.parsed_note.to_json()
 
     def test_creation(self):
