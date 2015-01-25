@@ -359,6 +359,26 @@ class TestNotebook(TestModel):
     def test_to_json(self):
         self.to_json_test(models.Notebook(notebook_title, notebook_id).to_json(), notebook_title, notebook_id)
 
+    @patch('paperworks.wrapper.api.create_notebook')
+    @patch('paperworks.wrapper.api.update_notebook')
+    def test_upload(self, mocked_create, mocked_update):
+        nb = models.Notebook(notebook_title)
+        nb.upload(self.pw)
+        mocked_create.assert_called()
+        mocked_create.assert_called_with(notebook_title)
+
+        nb = models.Notebook.from_json(notebook)
+        nb.upload(self.pw)
+        mocked_update.assert_called()
+        mocked_update.assert_calld_with(notebook)
+
+    @patch('paperworks.wrapper.api.remove_notebook')
+    def test_remove(self, mocked_remove):
+        nb = models.Notebook.from_json(notebook)
+        nb.remove()
+        mocked_remove.assert_called()
+        mocked_remove.assert_called_with(notebook_id)
+
 class TestNote(TestModel):
     def test_creation(self):
         new_note = models.Note(note_title)
@@ -378,7 +398,24 @@ class TestNote(TestModel):
         self.assertEqual(json_note['content'], content)
         self.to_json_test(json_note, note_title, note_id)
 
+    @patch('paperworks.wrapper.api.move_note')
+    def test_move_to(self, mocked_move):
+        new_note = modes.Note.from_json(note)
+        models.Notebook(notebook_title).add_note(new_note)
+        new_note.move_to(notebook2_id)
+        mocked_move.assert_calld_with(new_note.to_json(), notebook2_id)
 
+    @patch('paperworks.wrapper.api.remove_note')
+    def test_remove(self, mocked_remove):
+        new_note = models.Note.from_json(note)
+        new_note.remove()
+        mocked_remove.assert_calld_with(new_note.to_json())
+
+    @patch('paperwork.wrapper.api.update_note')
+    def test_update(self, mocked_update):
+        new_note = models.Note.from_json(note)
+        new_note.update()
+        mocked_update.assert_called_with(new_note.to_json())
 
 class TestTag(TestModel):
     def test_creation(self):
