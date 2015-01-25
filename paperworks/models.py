@@ -167,3 +167,11 @@ class Tag(Model):
             'title': self.title,
             'visibility': self.visibility
             }
+
+    @classmethod
+    def from_json(cls, json):
+        return cls(
+                json['title'],
+                json['id'],
+                json['visibility']
+                )
