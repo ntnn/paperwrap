@@ -482,3 +482,9 @@ class TestTag(TestModel):
 
     def test_to_json(self):
         self.to_json_test(models.Tag(tag_title, tag_id).to_json(), tag_title, tag_id)
+
+    def test_from_json(self):
+        self.tag = models.Tag.from_json(tag)
+        self.assertEqual(tag['id'], self.tag.id)
+        self.assertEqual(tag['title'], self.tag.title)
+        self.assertEqual(tag['visibility'], self.tag.visibility)
