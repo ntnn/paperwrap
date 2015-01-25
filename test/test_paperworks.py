@@ -2,7 +2,7 @@
 #Author: Nelo Wallus, http://github.com/ntnn
 import unittest
 from unittest.mock import call, patch
-from paperworks import wrapper
+from paperworks import paperwork, wrapper, models
 from json import dumps, loads
 import tempfile
 
@@ -274,3 +274,116 @@ class TestRequests(unittest.TestCase):
 
     def test_i18n_param(self):
         self.request(self.api.i18n, 'i18nkey', keyword)
+
+class TestPaperwork(unittest.TestCase):
+    def setUp(self):
+        self.pw = paperwork.Paperwork(user, passwd)
+
+    def tearDown(self):
+        pass
+
+    def test_parse_json_tag(self):
+        parsed_tag = self.pw.parse_json_tag(tag)
+        self.assertEqual(parsed_tag.id, tag['id'])
+        self.assertEqual(parsed_tag.title, tag['title'])
+        self.assertEqual(parsed_tag.visibility, tag['visibility'])
+
+    def test_parse_json_note(self):
+        parsed_tag = self.pw.parse_json(tag)
+        self.pw.add_tag(parsed_tag)
+        self.pw.add_notebook(self.pw.parse_json_notebook(notebook))
+        parsed_note = self.pw.parse_json_note(note)
+        parsed_note.add_tag(parsed_tag)
+        self.assertEqual(parsed_note.id, note['id'])
+        self.assertEqual(parsed_note.title, note['title'])
+        self.assertTrue(self.pw.find_tag(parsed_tag.title) in parsed_note.tags)
+
+    def test_parse_json_notebook(self):
+        parsed_notebook = self.pw.parse_json_notebook(notebook)
+        self.assertEqual(parsed_notebook.id, notebook['id'])
+        self.assertEqual(parsed_notebook.title, notebook['title'])
+
+    @patch('paperworks.wrapper.api.list_tags')
+    @patch('paperworks.wrapper.api.list_notebooks')
+    @patch('paperworks.wrapper.api.list_notebook_notes')
+    def test_download(self, mocked_list_tags, mocked_list_notebooks, mocked_list_notebook_notes):
+        mocked_list_tags.return_value( tags )
+        mocked_list_notebooks( notebooks )
+        mocked_list_notebook_notes( notes )
+        self.pw.download()
+        mocked_list_tags.assert_called()
+        mocked_list_notebooks.assert_called()
+        mocked_list_notebook_notes.assert_called()
+
+    @patch('paperworks.wrapper.api.update_notebook')
+    @patch('paperworks.wrapper.api.update_note')
+    def test_upload(self, mocked_update_notebook, mocked_update_note):
+        parsed_notebook = self.pw.parse_json(notebook)
+        self.pw.add_notebook(parsed_notebook)
+        self.pw.add_tag(self.pw.parse_json(tag))
+        parsed_notebook.add_note(self.pw.parse_json(note))
+        self.pw.upload()
+        mocked_update_notebook.assert_called()
+        mocked_update_note.assert_called()
+
+class TestModel(unittest.TestCase):
+    def setUp(self):
+        self.pw = paperwork.Paperwork(user, passwd)
+        pass
+
+    def tearDown(self):
+        pass
+
+    def create_test(self, model, title):
+        self.assertEqual(model.title, title)
+        self.assertEqual(model.id, 0)
+
+    def from_json_test(self, model, title, id):
+        self.assertEqual(model.title, title)
+        self.assertEqual(model.id, id)
+
+    def to_json_test(self, model, title, id):
+        self.assertEqual(model['title'], title)
+        self.assertEqual(model['id'], id)
+
+class TestNotebook(TestModel):
+    def test_creation(self):
+        nb = models.Notebook(notebook_title)
+        self.create_test(nb, notebook_title)
+        self.assertEqual(nb.notes, set())
+
+    def test_from_json(self):
+        parsed_notebook = models.Notebook.from_json(notebook)
+        self.from_json_test(parsed_notebook, notebook_title, notebook_id)
+
+    def test_to_json(self):
+        self.to_json_test(models.Notebook(notebook_title, notebook_id).to_json(), notebook_title, notebook_id)
+
+class TestNote(TestModel):
+    def test_creation(self):
+        new_note = models.Note(note_title)
+        self.create_test(new_note, note_title)
+        self.assertEqual(new_note.content, '')
+
+    def test_from_json(self):
+        parsed_note = models.Note.from_json(note)
+        self.assertEqual(parsed_note.content, content)
+        self.from_json_test(parsed_note, note_title, note_id)
+
+    def test_to_json(self):
+        new_note = models.Note(note_title, note_id, content)
+        new_note.add_tag(models.Tag.from_json(tag))
+        models.Notebook(notebook_title).add_note(new_note)
+        json_note = new_note.to_json()
+        self.assertEqual(json_note['content'], content)
+        self.to_json_test(json_note, note_title, note_id)
+
+
+
+class TestTag(TestModel):
+    def test_creation(self):
+        tag = models.Tag(tag_title)
+        self.create_test(tag, tag_title)
+
+    def test_to_json(self):
+        self.to_json_test(models.Tag(tag_title, tag_id).to_json(), tag_title, tag_id)
