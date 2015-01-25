@@ -173,14 +173,14 @@ class Paperwork:
                     nb.add_note(Note.from_file(f, self))
 
     def find_tag(self, key):
-        """Finds tag with key."""
+        """Finds tag with key (id or title)."""
         for tag in self.tags:
             if key in (tag.id, tag.title):
                 return tag
 
-    def find_or_create_tag(self, key):
+    def find_or_create_tag(self, title):
         """Return tag if found, else return new tag instance."""
-        return self.find_tag(key) or self.add_tag(Tag(key))
+        return self.find_tag(title) or self.add_tag(Tag(title))
 
     def find_notebook(self, key):
         """Find notebook by id."""
