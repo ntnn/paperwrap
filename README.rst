@@ -1,11 +1,11 @@
-paperwork python API wrapper
-============================
+paperwork python API wrapper and client
+=======================================
 
 | |Build Status|
 | `paperwork <https://github.com/twostairs/paperwork>`__ is 'an open
 source note-taking and archiving tool'.
 
-| Python3 is required.
+| Supported: python 2.7, 3.3+
 | Tests can be run with ``python3 -m unittest discover``.
 
 PyPI entry: `paperworks <https://pypi.python.org/pypi/paperworks/>`__
@@ -18,7 +18,7 @@ notes and tags.
 CLI
 ===
 
-``paperwork.py`` searches for the file ``~/.paperworkrc`` and, if found,
+``paperwork`` searches for the file ``~/.paperworkrc`` and, if found,
 reads host, username and password - if the file is not found the client
 prompts for values. A template can be found in the file
 ``paperworkrc.template``.

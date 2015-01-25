@@ -44,7 +44,10 @@ class Notebook(Model):
 
     @classmethod
     def from_json(cls, json):
-        return super().from_json(json)
+        return cls( #python2
+                json['title'],
+                json['id']
+                )
 
     def add_note(self, note):
         """Adds note to notebook. Returns note instance."""

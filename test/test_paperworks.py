@@ -1,10 +1,12 @@
 #License: MIT
 #Author: Nelo Wallus, http://github.com/ntnn
 import unittest
-from unittest.mock import call, patch
 from paperworks import paperwork, wrapper, models
+from unittest.mock import call, patch
 from json import dumps, loads
 import tempfile
+import sys
+
 
 notebook_id = '1'
 notebook2_id = '2'
