@@ -46,10 +46,12 @@ class Notebook(Model):
         return super().from_json(json)
 
     def add_note(self, note):
-        """Adds note to notebook. Sets reference to notebook in note."""
+        """Adds note to notebook. Returns note instance."""
         logger.info('Adding note {} to notebook {}'.format(note, self))
         note.notebook = self
+        note.pw = self.pw
         self.notes.add(note)
+        return note
 
 
 class Note(Model):

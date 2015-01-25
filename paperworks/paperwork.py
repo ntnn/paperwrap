@@ -20,6 +20,7 @@ class Paperwork:
         if isinstance(notebook, str):
             notebook = Notebook(notebook)
         logger.info('Added notebook {}'.format(notebook))
+        notebook.pw = self
         self.notebooks.add(notebook)
         return notebook
 
@@ -28,6 +29,7 @@ class Paperwork:
         if isinstance(tag, str):
             tag = Tag(tag)
         logger.info('Added tag {}'.format(tag))
+        tag.pw = self
         self.tags.add(tag)
         return tag
 
