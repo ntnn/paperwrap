@@ -286,49 +286,28 @@ class TestPaperwork(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_parse_json_tag(self):
-        parsed_tag = self.pw.parse_json_tag(tag)
-        self.assertEqual(parsed_tag.id, tag['id'])
-        self.assertEqual(parsed_tag.title, tag['title'])
-        self.assertEqual(parsed_tag.visibility, tag['visibility'])
-
-    def test_parse_json_note(self):
-        parsed_tag = self.pw.parse_json(tag)
-        self.pw.add_tag(parsed_tag)
-        self.pw.add_notebook(self.pw.parse_json_notebook(notebook))
-        parsed_note = self.pw.parse_json_note(note)
-        parsed_note.add_tag(parsed_tag)
-        self.assertEqual(parsed_note.id, note['id'])
-        self.assertEqual(parsed_note.title, note['title'])
-        self.assertTrue(self.pw.find_tag(parsed_tag.title) in parsed_note.tags)
-
-    def test_parse_json_notebook(self):
-        parsed_notebook = self.pw.parse_json_notebook(notebook)
-        self.assertEqual(parsed_notebook.id, notebook['id'])
-        self.assertEqual(parsed_notebook.title, notebook['title'])
-
-    @patch('paperworks.wrapper.api.list_tags')
-    @patch('paperworks.wrapper.api.list_notebooks')
     @patch('paperworks.wrapper.api.list_notebook_notes')
+    @patch('paperworks.wrapper.api.list_notebooks')
+    @patch('paperworks.wrapper.api.list_tags')
     def test_download(self, mocked_list_tags, mocked_list_notebooks, mocked_list_notebook_notes):
-        mocked_list_tags.return_value( tags )
-        mocked_list_notebooks( notebooks )
-        mocked_list_notebook_notes( notes )
+        mocked_list_tags.return_value = tags
+        mocked_list_notebooks.return_value = [notebook]
+        mocked_list_notebook_notes.return_value = notes
         self.pw.download()
-        mocked_list_tags.assert_called()
-        mocked_list_notebooks.assert_called()
-        mocked_list_notebook_notes.assert_called()
+        self.assertTrue(mocked_list_tags.called)
+        self.assertTrue(mocked_list_notebooks.called)
+        self.assertTrue(mocked_list_notebook_notes.called)
 
-    @patch('paperworks.wrapper.api.update_notebook')
-    @patch('paperworks.wrapper.api.update_note')
-    def test_upload(self, mocked_update_notebook, mocked_update_note):
+    @patch('paperworks.models.Note.update')
+    @patch('paperworks.models.Notebook.update')
+    def test_update(self, mocked_update_notebook, mocked_update_note):
         parsed_notebook = self.pw.parse_json(notebook)
         self.pw.add_notebook(parsed_notebook)
         self.pw.add_tag(self.pw.parse_json(tag))
         parsed_notebook.add_note(self.pw.parse_json(note))
-        self.pw.upload()
-        mocked_update_notebook.assert_called()
-        mocked_update_note.assert_called()
+        self.pw.update()
+        self.assertTrue(mocked_update_note.called)
+        self.assertTrue(mocked_update_notebook.called)
 
 class TestModel(unittest.TestCase):
     def setUp(self):

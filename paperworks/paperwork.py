@@ -36,34 +36,11 @@ class Paperwork:
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
         if 'visibility' in json.keys():
-            return self.parse_json_tag(json)
+            return Tag.from_json(json)
         elif 'content' in json.keys():
-            return self.parse_json_note(json)
+            return Note.from_json(json)
         else:
-            return self.parse_json_notebook(json)
-
-    def parse_json_tag(self, json):
-        """Parses tag from given json. If tag exists it returns the Tag-instance."""
-        logger.info('Parsing json tag {}:{}'.format(json['id'], json['title']))
-        return self.find_tag(json['id']) or Tag(json['title'], json['id'], json['visibility'])
-
-    def parse_json_note(self, json):
-        """Parses note from given json. Adds references to tags and notebooks."""
-        #Iterates over the list of tag-dicts and adds from the paperwork.tags dict
-        #Probably problematic
-        logger.info('Parsing json note {}:{}'.format(json['id'], json['title']))
-        tags = set( [ self.parse_json_tag(tag) for tag in json['tags'] ] )
-        return Note(
-                json['title'],
-                json['id'],
-                json['content'],
-                tags
-                )
-
-    def parse_json_notebook(self, json):
-        """Parses notebook from given json. If notebook exists it returns the Notebook-instance."""
-        logger.info('Parsing json notebook {}:{}'.format(json['id'], json['title']))
-        return self.find_notebook(json['id']) or Notebook(json['title'], json['id'])
+            return Notebook.from_json(json)
 
     def download(self):
         """Downloading tags, notebooks and notes from host."""
@@ -85,25 +62,15 @@ class Paperwork:
                 note.add_tags( [ self.find_or_create_tag(tag['title']) for tag in note_json['tags'] ] )
                 nb.add_note(note)
 
-    def upload(self):
-        """Uploading notebooks and notes to host."""
-        logger.info('Uploading all')
+    def update(self):
+        """Updating notebooks and notes to host."""
+        logger.info('Updating notebooks and notes')
         for nb in self.notebooks:
             if 'All Notes' in nb.title:
-                logger.info('Not uploading notebook {}'.format(nb))
-            elif nb.id is 0:
-                logger.info('Uploading and creating notebook{}'.format(nb))
-                nb.id = self.api.create_notebook(nb.title)['id']
-            else:
-                logger.info('Uploading notebook {}'.format(nb))
-                self.api.update_notebook(nb.to_json())
+                logger.info('Not updating notebook {}'.format(nb))
+            nb.update()
             for note in nb.notes:
-                if note.id is 0:
-                    logger.info('Uploading and creating note {}'.format(note))
-                    note.id = self.api.create_note(nb.id, note.title, note.content)['id']
-                else:
-                    logger.info('Uploading note {}'.format(note))
-                    self.api.update_note(note.to_json())
+                note.update()
 
     def write_paperwork_to_disk(self, folder = 'paperwork'):
         """Downloads notebooks and notes to disk."""
