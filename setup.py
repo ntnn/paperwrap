@@ -21,7 +21,6 @@ if __name__ == "__main__":
         pip(['install', '3to2', 'mock', '--upgrade'])
         from lib3to2 import main as three2two
         three2two.main('lib3to2.fixes', '-n --no-diffs -w paperworks'.split(' '))
-        three2two.main('lib3to2.fixes', '-n --no-diffs -w test'.split(' '))
 
     setup(
         name = package_name,

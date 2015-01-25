@@ -13,4 +13,4 @@ notifications:
         on_success: never
 install:
     - "pip install ."
-script: python -m unittest discover
+script: python run_tests.py

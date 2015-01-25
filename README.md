@@ -3,7 +3,7 @@
 [paperwork](https://github.com/twostairs/paperwork) is 'an open source note-taking and archiving tool'.
 
 Supported: python 2.7, 3.3+  
-Tests can be run with `python3 -m unittest discover`.
+Tests can be run with `./run_tests.py`.
 
 PyPI entry: [paperworks](https://pypi.python.org/pypi/paperworks/) 
 
