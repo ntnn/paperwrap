@@ -13,12 +13,12 @@ with open(path.join(here, package_name, 'wrapper.py'), 'r') as f:
     version = re.search("__version__ = u?'([^']+)'", f.read()).group(1)
 with open(path.join(here, 'requirements.txt'), 'r') as f:
     requirements = f.read().splitlines()
+requirements = [ req for req in requirements ]
 
 if __name__ == "__main__":
     #part taken from https://github.com/gbin/err/blob/master/setup.py#L54-68
     if sys.version_info[:2][0] == 2:
-        from pip import main as pip
-        pip(['install', '3to2', 'mock', '--upgrade'])
+        requirements += [ '3to2', 'mock' ]
         from lib3to2 import main as three2two
         three2two.main('lib3to2.fixes', '-n --no-diffs -w paperworks'.split(' '))
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         name = package_name,
         version = version,
 
-        description = 'API Wrapper for the open-source note taking tool paperwork',
+        description = 'API Wrapper and command line client for the open-source note taking tool paperwork',
         long_description = long_description,
 
         url = 'https://github.com/ntnn/paperwork.py',
@@ -51,10 +51,10 @@ if __name__ == "__main__":
             'console_scripts': [ 'paperwork = paperworks.paperwork:main' ]
             },
 
-        install_requires = [ req for req in requirements ],
+        install_requires = requirements,
 
         keywords = 'paperwork rocks twostairs api wrapper',
 
-        packages = find_packages(exclude = [ 'tests*' ])
+        packages = find_packages(exclude = [ 'test' ])
     )
 
