@@ -438,7 +438,7 @@ class TestNote(TestModel):
         mocked_create.return_value = { 'id': 0 }
         self.parsed_note.id = 0
         self.parsed_note.update()
-        mocked_create.assert_called_with(self.parsed_note.to_json())
+        mocked_create.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.title, self.parsed_note.content)
         self.assertFalse(mocked_get.called)
         self.assertFalse(mocked_update.called)
 

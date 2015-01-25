@@ -171,13 +171,13 @@ class Note(Model):
     def update(self, force = False):
         """Updates local or remote note, depending on timestamp. Creates if note id is 0."""
         if self.id == 0:
-            self.id = self.pw.api.create_note(self.to_json())['id']
+            self.id = self.pw.api.create_note(self.notebook.id, self.title, self.content)['id']
         else:
             remote = self.pw.api.get_note(self.notebook.id, self.id)
             if remote is None:
                 logger.error('Remote note could not be found. Wrong id, deleted or moved to another notebook.')
-            elif remote['updated_at'] < self.updated_at or force:
-                logger.info('Remote version is lower. Updating remote note.')
+            elif remote['updated_at'] <= self.updated_at or force:
+                logger.info('Remote version is lower or force update. Updating remote note.')
                 self.pw.api.update_note(self.to_json())
             else:
                 logger.info('Remote version is higher. Updating local note.')
@@ -237,6 +237,9 @@ class Paperwork:
 
     def get_notes(self):
         return [ note for notebook in self.notebooks for note in notebook.notes ]
+
+    def get_notebooks(self):
+        return list(self.notebooks)
 
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
