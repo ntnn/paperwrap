@@ -12,5 +12,6 @@ notifications:
         on_failure: change
         on_success: never
 install:
+    - "pip install 3to2 mock"
     - "pip install ."
 script: python run_tests.py
