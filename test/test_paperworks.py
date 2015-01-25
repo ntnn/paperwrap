@@ -380,24 +380,29 @@ class TestNotebook(TestModel):
         self.assertEqual(new_note.content, content)
 
     @patch('paperworks.wrapper.api.create_notebook')
+    @patch('paperworks.wrapper.api.get_notebook')
     @patch('paperworks.wrapper.api.update_notebook')
-    def test_upload(self, mocked_create, mocked_update):
-        nb = models.Notebook(notebook_title)
-        nb.upload(self.pw)
-        mocked_create.assert_called()
-        mocked_create.assert_called_with(notebook_title)
+    def test_update_creates(self, mocked_update, mocked_get, mocked_create):
+        self.nb.id = 0
+        self.nb.update()
+        mocked_create.assert_called_with(self.nb.title)
+        self.assertFalse(mocked_get.called)
+        self.assertFalse(mocked_update.called)
 
-        nb = models.Notebook.from_json(notebook)
-        nb.upload(self.pw)
-        mocked_update.assert_called()
-        mocked_update.assert_calld_with(notebook)
+    @patch('paperworks.wrapper.api.create_notebook')
+    @patch('paperworks.wrapper.api.get_notebook')
+    @patch('paperworks.wrapper.api.update_notebook')
+    def test_update_updates_remote(self, mocked_update, mocked_get, mocked_create):
+        mocked_get.return_value = note
+        self.nb.update()
+        self.assertFalse(mocked_create.called)
+        mocked_get.assert_called_with(self.nb.id)
+        mocked_update.assert_called_with(self.nb.to_json())
 
-    @patch('paperworks.wrapper.api.remove_notebook')
-    def test_remove(self, mocked_remove):
-        nb = models.Notebook.from_json(notebook)
-        nb.remove()
-        mocked_remove.assert_called()
-        mocked_remove.assert_called_with(notebook_id)
+    @patch('paperworks.wrapper.api.delete_notebook')
+    def test_delete(self, mocked_delete):
+        self.nb.delete()
+        mocked_delete.assert_called_with(notebook_id)
 
 class TestNote(TestModel):
     def test_creation(self):
