@@ -291,7 +291,7 @@ class Paperwork:
         return self.find_tag(title) or self.add_tag(Tag(title))
 
     def find_notebook(self, key):
-        """Find notebook by id."""
+        """Find notebook with key (id or title)."""
         for notebook in self.notebooks:
             if key in (notebook.id, notebook.title):
                 return notebook
