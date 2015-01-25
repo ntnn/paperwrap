@@ -208,8 +208,8 @@ class TestRequests(unittest.TestCase):
     def test_update_notebook(self):
         self.request(self.api.update_notebook, 'notebook', notebook)
 
-    def test_remove_notebook(self):
-        self.request(self.api.remove_notebook, 'notebook', notebook_id)
+    def test_delete_notebook(self):
+        self.request(self.api.delete_notebook, 'notebook', notebook_id)
 
     def test_list_notebook_notes(self):
         self.request(self.api.list_notebook_notes, 'notes', notebook_id)
@@ -226,11 +226,11 @@ class TestRequests(unittest.TestCase):
     def test_update_note(self):
         self.request(self.api.update_note, 'note', note)
 
-    def test_remove_note(self):
-        self.request(self.api.remove_note, 'notes', note)
+    def test_delete_note(self):
+        self.request(self.api.delete_note, 'notes', note)
 
-    def test_remove_notes(self):
-        self.request(self.api.remove_notes, 'notes', notes)
+    def test_delete_notes(self):
+        self.request(self.api.delete_notes, 'notes', notes)
 
     def test_move_note(self):
         self.request(self.api.move_note, 'move', note, new_notebook_id)
@@ -253,8 +253,8 @@ class TestRequests(unittest.TestCase):
     def test_get_note_attachment(self):
         self.request(self.api.get_note_attachment, 'attachment', note, attachment_id)
 
-    def test_remove_note_attachment(self):
-        self.request(self.api.remove_note_attachment, 'attachment', note, attachment_id)
+    def test_delete_note_attachment(self):
+        self.request(self.api.delete_note_attachment, 'attachment', note, attachment_id)
 
     # TODO (Nelo Wallus): Fix actual method
     @unittest.expectedFailure

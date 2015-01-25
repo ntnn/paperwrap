@@ -95,7 +95,7 @@ class api:
         """Updates notebook."""
         return self.put(notebook, 'notebook', notebook['id'])
 
-    def remove_notebook(self, notebook_id):
+    def delete_notebook(self, notebook_id):
         """Deletes notebook and all containing notes."""
         return self.delete('notebook', notebook_id)
 
@@ -119,11 +119,11 @@ class api:
         """Updates note and returns meta info."""
         return self.put(note, 'note', note['notebook_id'], note['id'])
 
-    def remove_note(self, note):
+    def delete_note(self, note):
         """Deletes note and returns meta info."""
-        return self.remove_notes([note])
+        return self.delete_notes([note])
 
-    def remove_notes(self, notes):
+    def delete_notes(self, notes):
         """Deletes note and returns meta info."""
         return self.delete('notes', notes[0]['notebook_id'], ','.join([ note['id'] for note in notes ]))
 
@@ -150,7 +150,7 @@ class api:
     def get_note_attachment(self, note, attachment_id):
         return self.get('attachment', note['notebook_id'], note['id'], note['versions'][0]['id'], attachment_id)
 
-    def remove_note_attachment(self, note, attachment_id):
+    def delete_note_attachment(self, note, attachment_id):
         return self.delete('attachment', note['notebook_id'], note['id'], note['versions'][0]['id'], attachment_id)
 
     # TODO (Nelo Wallus): Create method
