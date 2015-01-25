@@ -175,7 +175,7 @@ cmd_dict = {
         'help': print_help
         }
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="verbose output", action="store_true")
     args = parser.parse_args()
@@ -203,3 +203,6 @@ if __name__ == "__main__":
             logger.info('Invalid command')
             print('{} unkown'.format(cmd))
         cmd = input('>')
+
+if __name__ == "__main__":
+    main()
