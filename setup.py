@@ -18,7 +18,8 @@ requirements = [ req for req in requirements ]
 if __name__ == "__main__":
     #part taken from https://github.com/gbin/err/blob/master/setup.py#L54-68
     if sys.version_info[:2][0] == 2:
-        requirements += [ '3to2', 'mock' ]
+        from pip import main as pip
+        pip(['install', '3to2', 'mock'])
         from lib3to2 import main as three2two
         three2two.main('lib3to2.fixes', '-n --no-diffs -w paperworks'.split(' '))
 
