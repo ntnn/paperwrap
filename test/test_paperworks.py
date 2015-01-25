@@ -431,22 +431,49 @@ class TestNote(TestModel):
 
     @patch('paperworks.wrapper.api.move_note')
     def test_move_to(self, mocked_move):
-        new_note = modes.Note.from_json(note)
-        models.Notebook(notebook_title).add_note(new_note)
-        new_note.move_to(notebook2_id)
-        mocked_move.assert_calld_with(new_note.to_json(), notebook2_id)
+        self.parsed_note.move_to(models.Notebook.from_json(notebook2))
+        mocked_move.assert_called_with(self.parsed_note_json, notebook2_id)
 
-    @patch('paperworks.wrapper.api.remove_note')
-    def test_remove(self, mocked_remove):
-        new_note = models.Note.from_json(note)
-        new_note.remove()
-        mocked_remove.assert_calld_with(new_note.to_json())
+    @patch('paperworks.wrapper.api.delete_note')
+    def test_delete(self, mocked_delete):
+        self.parsed_note.delete()
+        mocked_delete.assert_called_with(self.parsed_note.id)
 
-    @patch('paperwork.wrapper.api.update_note')
-    def test_update(self, mocked_update):
-        new_note = models.Note.from_json(note)
-        new_note.update()
-        mocked_update.assert_called_with(new_note.to_json())
+    @patch('paperworks.wrapper.api.create_note')
+    @patch('paperworks.wrapper.api.get_note')
+    @patch('paperworks.wrapper.api.update_note')
+    def test_update_create(self, mocked_update, mocked_get, mocked_create):
+        mocked_create.return_value = { 'id': 0 }
+        self.parsed_note.id = 0
+        self.parsed_note.update()
+        mocked_create.assert_called_with(self.parsed_note.to_json())
+        self.assertFalse(mocked_get.called)
+        self.assertFalse(mocked_update.called)
+
+    @patch('paperworks.wrapper.api.create_note')
+    @patch('paperworks.wrapper.api.get_note')
+    @patch('paperworks.wrapper.api.update_note')
+    def test_update_remote(self, mocked_update, mocked_get, mocked_create):
+        mocked_get.return_value = note
+        self.parsed_note.updated_at = '2014-09-22 19:43:59'
+        self.parsed_note.update()
+        self.assertFalse(mocked_create.called)
+        mocked_get.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.id)
+        mocked_update.assert_called_with(self.parsed_note.to_json())
+
+    @patch('paperworks.wrapper.api.create_note')
+    @patch('paperworks.wrapper.api.get_note')
+    @patch('paperworks.wrapper.api.update_note')
+    def test_update_local(self, mocked_update, mocked_get, mocked_create):
+        mocked_get.return_value = note
+        self.parsed_note.updated_at = '2014-09-14 19:43:59'
+        self.parsed_note.update()
+        self.assertFalse(mocked_create.called)
+        mocked_get.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.id)
+        self.assertFalse(mocked_update.called)
+        self.assertEqual(self.parsed_note.title, note['title'])
+        self.assertEqual(self.parsed_note.content, note['content'])
+        self.assertEqual(self.parsed_note.updated_at, note['updated_at'])
 
 class TestTag(TestModel):
     def test_creation(self):
