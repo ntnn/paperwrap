@@ -405,21 +405,27 @@ class TestNotebook(TestModel):
         mocked_delete.assert_called_with(notebook_id)
 
 class TestNote(TestModel):
+    def setUp(self):
+        super().setUp()
+        self.new_note = models.Note(note_title, paperwork = self.pw)
+        self.old_note = models.Note(note_title, note_id, content, paperwork = self.pw)
+        self.parsed_note = models.Note.from_json(note)
+        self.parsed_note.pw = self.pw
+        models.Notebook.from_json(notebook).add_note(self.parsed_note)
+        self.parsed_note_json = self.parsed_note.to_json()
+
     def test_creation(self):
-        new_note = models.Note(note_title)
-        self.create_test(new_note, note_title)
-        self.assertEqual(new_note.content, '')
+        self.create_test(self.new_note, note_title)
+        self.assertEqual(self.new_note.content, '')
 
     def test_from_json(self):
-        parsed_note = models.Note.from_json(note)
-        self.assertEqual(parsed_note.content, content)
-        self.from_json_test(parsed_note, note_title, note_id)
+        self.assertEqual(self.parsed_note.content, content)
+        self.from_json_test(self.parsed_note, note_title, note_id)
 
     def test_to_json(self):
-        new_note = models.Note(note_title, note_id, content)
-        new_note.add_tag(models.Tag.from_json(tag))
-        models.Notebook(notebook_title).add_note(new_note)
-        json_note = new_note.to_json()
+        self.old_note.add_tag(models.Tag.from_json(tag))
+        models.Notebook(notebook_title).add_note(self.old_note)
+        json_note = self.old_note.to_json()
         self.assertEqual(json_note['content'], content)
         self.to_json_test(json_note, note_title, note_id)
 
