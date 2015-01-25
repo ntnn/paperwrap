@@ -333,7 +333,6 @@ class TestPaperwork(unittest.TestCase):
 class TestModel(unittest.TestCase):
     def setUp(self):
         self.pw = paperwork.Paperwork(user, passwd)
-        pass
 
     def tearDown(self):
         pass
@@ -351,6 +350,11 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model['id'], id)
 
 class TestNotebook(TestModel):
+    def setUp(self):
+        super().setUp()
+        self.nb = models.Notebook(notebook_title, notebook_id, paperwork = self.pw)
+        self.note = models.Note.from_json(note)
+
     def test_creation(self):
         nb = models.Notebook(notebook_title)
         self.create_test(nb, notebook_title)
@@ -362,6 +366,18 @@ class TestNotebook(TestModel):
 
     def test_to_json(self):
         self.to_json_test(models.Notebook(notebook_title, notebook_id).to_json(), notebook_title, notebook_id)
+
+    def test_add_note(self):
+        self.nb.add_note(self.note)
+        self.assertTrue(self.note in self.nb.notes)
+        self.assertEqual(self.note.notebook, self.nb)
+
+    def test_create_note(self):
+        new_note = self.nb.create_note(note_title, content)
+        self.assertTrue(new_note in self.nb.notes)
+        self.assertEqual(new_note.notebook, self.nb)
+        self.assertEqual(new_note.title, note_title)
+        self.assertEqual(new_note.content, content)
 
     @patch('paperworks.wrapper.api.create_notebook')
     @patch('paperworks.wrapper.api.update_notebook')
