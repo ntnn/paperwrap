@@ -75,16 +75,19 @@ note_title = 'note title'
 content = 'some content'
 note_id = '4'
 note2_id = '5'
+note_updated_at = '2014-09-20 19:43:59'
+note2_updated_at = '2014-09-19 19:43:59'
 
 note = {
-   'id': note_id,
-   'title': note_title,
-   'content': content,
-   'notebook_id': notebook_id,
-   'tags': [
-       tag
-       ],
-   'versions': [
+       'id': note_id,
+       'title': note_title,
+       'content': content,
+       'notebook_id': notebook_id,
+       'updated_at': note_updated_at,
+       'tags': [
+           tag
+           ],
+       'versions': [
            version
            ]
         }
@@ -93,6 +96,7 @@ note2 = {
         'title': note_title,
         'content': content,
         'notebook_id': notebook_id,
+        'updated_at': note2_updated_at,
         'tags': [
             tag2
             ],
