@@ -105,15 +105,55 @@ class Note(Model):
         self.tags.add(tag)
 
     def add_tags(self, tags):
-        """Adds multiple tags to note. Uses add_tag()."""
+        """Adds multiple tags to note."""
         for tag in tags:
             self.add_tag(tag)
 
     def string_tags(self):
+        """Returns tag names in a string, separated by spaces."""
         ret = ''
         for tag in self.tags:
             ret += tag.title + ' '
         return ret
+
+    def move_to(self, notebook):
+        """Moves note to given notebook instance."""
+        if None in (notebook, self.notebook) or 0 in (notebook.id, self.notebook.id, self.id):
+            logger.error('Error while moving note {} from {} to {}'.format(self, self.notebook, notebook))
+        else:
+            self.pw.api.move_note(self.to_json(), notebook.id)
+        self.notebook.delete_note(self)
+        notebook.add_note(self)
+
+    def delete(self):
+        """Deletes note."""
+        if self.id == 0:
+            logger.error('Error while removing note {}'.format(self))
+        else:
+            self.pw.api.delete_note(self.id)
+        self.notebook.delete_note(self)
+
+    def update(self, force = False):
+        """Updates local or remote note, depending on timestamp. Creates if note id is 0."""
+        if self.id == 0:
+            self.id = self.pw.api.create_note(self.to_json())['id']
+        else:
+            remote = self.pw.api.get_note(self.notebook.id, self.id)
+            if remote is None:
+                logger.error('Remote note could not be found. Wrong id, deleted or moved to another notebook.')
+            elif remote['updated_at'] < self.updated_at or force:
+                logger.info('Remote version is lower. Updating remote note.')
+                self.pw.api.update_note(self.to_json())
+            else:
+                logger.info('Remote version is higher. Updating local note.')
+                self.title = remote['title']
+                self.content = remote['content']
+                self.updated_at = remote['updated_at']
+                self.tags = set()
+                # TODO (Nelo Wallus): Create tags with
+                # correct id if not available
+                for tag in remote['tags']:
+                    self.add_tag(self.pw.find_or_create_tag(tag['title']))
 
 class Tag(Model):
     def __init__(self, title, id = 0, visibility = 0, notes = set(), paperwork = None):
