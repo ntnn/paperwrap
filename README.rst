@@ -15,5 +15,13 @@ PyPI entry: `paperworks <https://pypi.python.org/pypi/paperworks/>`__
 notes and tags.
 | ``paperwork.py`` is a command-line client.
 
+CLI
+===
+
+``paperwork.py`` searches for the file ``~/.paperworkrc`` and, if found,
+reads host, username and password - if the file is not found the client
+prompts for values. A template can be found in the file
+``paperworkrc.template``.
+
 .. |Build Status| image:: https://travis-ci.org/ntnn/paperwork.py.svg?branch=master
    :target: https://travis-ci.org/ntnn/paperwork.py
