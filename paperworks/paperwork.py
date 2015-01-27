@@ -74,7 +74,7 @@ def prompt(text, important = False):
     else:
         text = text + ' Y/n'
         answers += ('',)
-    answer = input(text)
+    answer = getpass(text)
     if answer in answers:
         return True
     return False
