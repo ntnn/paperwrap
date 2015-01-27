@@ -1,80 +1,79 @@
-#License: MIT
-#Author: Nelo Wallus, http://github.com/ntnn
+# License: MIT
+# Author: Nelo Wallus, http://github.com/ntnn
 import unittest
-from paperworks import paperwork, wrapper, models
-from json import dumps, loads
+from paperworks import wrapper, models
+from json import dumps
 import tempfile
-import sys
 
 try:
-    from unittest.mock import call, patch
+    from unittest.mock import patch
 except ImportError:
-    from mock import call, patch
+    from mock import patch
 
 notebook_id = '1'
 notebook2_id = '2'
 new_notebook_id = '2'
 notebook_title = 'notebook title'
 notebook = {
-   'id': notebook_id,
-   'title': notebook_title
-   }
+    'id': notebook_id,
+    'title': notebook_title
+    }
 notebook2 = {
-   'id': notebook2_id,
-   'title': notebook_title
-   }
+    'id': notebook2_id,
+    'title': notebook_title
+    }
 notebooks = [
-   notebook,
-   notebook2
-   ]
+    notebook,
+    notebook2
+    ]
 
 version_id = '10'
 version2_id = '11'
 version = {
-        'id': version_id
-        }
+    'id': version_id
+    }
 version2 = {
-        'id': version2_id
-        }
+    'id': version2_id
+    }
 versions = [
-        version,
-        version2
-        ]
+    version,
+    version2
+    ]
 
 attachment_id = '55'
 attachment2_id = '56'
 attachment_file = 'attached.pdf'
 attachment = {
-        'id': attachment_id,
-        'file': attachment_file
-        }
+    'id': attachment_id,
+    'file': attachment_file
+    }
 attachment2 = {
-        'id': attachment2_id,
-        'file': attachment_file
-        }
+    'id': attachment2_id,
+    'file': attachment_file
+    }
 attachments = [
-        attachment,
-        attachment2
-        ]
+    attachment,
+    attachment2
+    ]
 
 tag_id = '42'
 tag2_id = '43'
 tag_title = 'some_tag'
 
 tag = {
-       'id': tag_id,
-       'title': tag_title,
-       'visibility': 0
-       }
+    'id': tag_id,
+    'title': tag_title,
+    'visibility': 0
+    }
 tag2 = {
-        'id': tag2_id,
-        'title': tag_title,
-        'visibility': 0
-        }
+    'id': tag2_id,
+    'title': tag_title,
+    'visibility': 0
+    }
 tags = [
-        tag,
-        tag2
-        ]
+    tag,
+    tag2
+    ]
 
 note_title = 'note title'
 content = 'some content'
@@ -84,35 +83,35 @@ note_updated_at = '2014-09-20 19:43:59'
 note2_updated_at = '2014-09-19 19:43:59'
 
 note = {
-       'id': note_id,
-       'title': note_title,
-       'content': content,
-       'notebook_id': notebook_id,
-       'updated_at': note_updated_at,
-       'tags': [
-           tag
-           ],
-       'versions': [
-           version
-           ]
-        }
-note2 = {
-        'id': note2_id,
-        'title': note_title,
-        'content': content,
-        'notebook_id': notebook_id,
-        'updated_at': note2_updated_at,
-        'tags': [
-            tag2
-            ],
-        'versions': [
-            version2
-            ]
-        }
-notes = [
-        note,
-        note2
+    'id': note_id,
+    'title': note_title,
+    'content': content,
+    'notebook_id': notebook_id,
+    'updated_at': note_updated_at,
+    'tags': [
+        tag
+        ],
+    'versions': [
+        version
         ]
+    }
+note2 = {
+    'id': note2_id,
+    'title': note_title,
+    'content': content,
+    'notebook_id': notebook_id,
+    'updated_at': note2_updated_at,
+    'tags': [
+        tag2
+        ],
+    'versions': [
+        version2
+        ]
+    }
+notes = [
+    note,
+    note2
+    ]
 
 keyword = 'test keyword'
 keyword_b64 = 'dGVzdCBrZXl3b3Jk'
@@ -132,39 +131,40 @@ move = [{
         }]
 
 tagged = [
-        note
-        ]
+    note
+    ]
 
 search = [
-        note2
-        ]
+    note2
+    ]
 
 i18n = {
-        'holy': 'moly',
-        'giant': 'dict'
-        }
+    'holy': 'moly',
+    'giant': 'dict'
+    }
 
 i18nkey = {
-        'giant': 'dict' #not so much
-        }
+    'giant': 'dict'
+    }
 
 ret = {
-        'notebooks':   notebooks,
-        'notebook':    notebook,
-        'notes':       notes,
-        'note':        note,
-        'move':        move,
-        'versions':    versions,
-        'version':     version,
-        'attachments': attachments,
-        'attachment':  attachment,
-        'tags':        tags,
-        'tag':         tag,
-        'tagged':      tagged,
-        'search':      search,
-        'i18n':        i18n,
-        'i18nkey':     i18n
-        }
+    'notebooks':   notebooks,
+    'notebook':    notebook,
+    'notes':       notes,
+    'note':        note,
+    'move':        move,
+    'versions':    versions,
+    'version':     version,
+    'attachments': attachments,
+    'attachment':  attachment,
+    'tags':        tags,
+    'tag':         tag,
+    'tagged':      tagged,
+    'search':      search,
+    'i18n':        i18n,
+    'i18nkey':     i18n
+    }
+
 
 class TestRequests(unittest.TestCase):
     def setUp(self):
@@ -186,11 +186,10 @@ class TestRequests(unittest.TestCase):
     def request(self, function, keyword, *args):
         temp = tempfile.TemporaryFile()
         temp.write(dumps(
-                {
+            {
                 'success': True,
                 'response': ret[keyword]
-                }
-            ).encode('ASCII'))
+            }).encode('ASCII'))
         temp.seek(0)
         self.mocked_urlopen.return_value = temp
 
@@ -220,7 +219,8 @@ class TestRequests(unittest.TestCase):
         self.request(self.api.list_notebook_notes, 'notes', notebook_id)
 
     def test_create_note(self):
-        self.request(self.api.create_note, 'notes', notebook_id, note_title, content)
+        self.request(self.api.create_note, 'notes', notebook_id,
+                     note_title, content)
 
     def test_get_note(self):
         self.request(self.api.get_note, 'note', notebook_id, note_id)
@@ -256,15 +256,18 @@ class TestRequests(unittest.TestCase):
         self.request(self.api.list_note_attachments, 'attachments', note)
 
     def test_get_note_attachment(self):
-        self.request(self.api.get_note_attachment, 'attachment', note, attachment_id)
+        self.request(self.api.get_note_attachment, 'attachment', note,
+                     attachment_id)
 
     def test_delete_note_attachment(self):
-        self.request(self.api.delete_note_attachment, 'attachment', note, attachment_id)
+        self.request(self.api.delete_note_attachment, 'attachment', note,
+                     attachment_id)
 
     # TODO (Nelo Wallus): Fix actual method
     @unittest.expectedFailure
     def test_upload_attachment(self):
-        self.request(self.api.upload_attachment, 'attachments', note, attachment)
+        self.request(self.api.upload_attachment, 'attachments', note,
+                     attachment)
 
     def test_list_tags(self):
         self.request(self.api.list_tags, 'tags')
@@ -284,6 +287,7 @@ class TestRequests(unittest.TestCase):
     def test_i18n_param(self):
         self.request(self.api.i18n, 'i18nkey', keyword)
 
+
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
         self.pw = models.Paperwork(user, passwd)
@@ -294,7 +298,8 @@ class TestPaperwork(unittest.TestCase):
     @patch('paperworks.wrapper.api.list_notebook_notes')
     @patch('paperworks.wrapper.api.list_notebooks')
     @patch('paperworks.wrapper.api.list_tags')
-    def test_download(self, mocked_list_tags, mocked_list_notebooks, mocked_list_notebook_notes):
+    def test_download(self, mocked_list_tags, mocked_list_notebooks,
+                      mocked_list_notebook_notes):
         mocked_list_tags.return_value = tags
         mocked_list_notebooks.return_value = [notebook]
         mocked_list_notebook_notes.return_value = notes
@@ -327,6 +332,7 @@ class TestPaperwork(unittest.TestCase):
         self.assertTrue(n in nb_notes)
         self.assertTrue(n2 in nb_notes)
 
+
 class TestModel(unittest.TestCase):
     def setUp(self):
         self.pw = models.Paperwork(user, passwd)
@@ -346,10 +352,12 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model['title'], title)
         self.assertEqual(model['id'], id)
 
+
 class TestNotebook(TestModel):
     def setUp(self):
         super().setUp()
-        self.nb = models.Notebook(notebook_title, notebook_id, paperwork = self.pw)
+        self.nb = models.Notebook(notebook_title, notebook_id,
+                                  paperwork=self.pw)
         self.note = models.Note.from_json(note)
 
     def test_creation(self):
@@ -362,7 +370,10 @@ class TestNotebook(TestModel):
         self.from_json_test(parsed_notebook, notebook_title, notebook_id)
 
     def test_to_json(self):
-        self.to_json_test(models.Notebook(notebook_title, notebook_id).to_json(), notebook_title, notebook_id)
+        self.to_json_test(
+            models.Notebook(notebook_title, notebook_id).to_json(),
+            notebook_title,
+            notebook_id)
 
     def test_add_note(self):
         self.nb.add_note(self.note)
@@ -389,7 +400,8 @@ class TestNotebook(TestModel):
     @patch('paperworks.wrapper.api.create_notebook')
     @patch('paperworks.wrapper.api.get_notebook')
     @patch('paperworks.wrapper.api.update_notebook')
-    def test_update_updates_remote(self, mocked_update, mocked_get, mocked_create):
+    def test_update_updates_remote(self, mocked_update, mocked_get,
+                                   mocked_create):
         mocked_get.return_value = note
         self.nb.update()
         self.assertFalse(mocked_create.called)
@@ -401,11 +413,13 @@ class TestNotebook(TestModel):
         self.nb.delete()
         mocked_delete.assert_called_with(notebook_id)
 
+
 class TestNote(TestModel):
     def setUp(self):
         super().setUp()
-        self.new_note = models.Note(note_title, paperwork = self.pw)
-        self.old_note = models.Note(note_title, note_id, content, paperwork = self.pw)
+        self.new_note = models.Note(note_title, paperwork=self.pw)
+        self.old_note = models.Note(note_title, note_id, content,
+                                    paperwork=self.pw)
         self.parsed_note = models.Note.from_json(note)
         models.Notebook.from_json(notebook).add_note(self.parsed_note)
         self.parsed_note.pw = self.pw
@@ -443,10 +457,13 @@ class TestNote(TestModel):
     @patch('paperworks.wrapper.api.get_note')
     @patch('paperworks.wrapper.api.update_note')
     def test_update_create(self, mocked_update, mocked_get, mocked_create):
-        mocked_create.return_value = { 'id': 0 }
+        mocked_create.return_value = {'id': 0}
         self.parsed_note.id = 0
         self.parsed_note.update()
-        mocked_create.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.title, self.parsed_note.content)
+        mocked_create.assert_called_with(
+            self.parsed_note.notebook.id,
+            self.parsed_note.title,
+            self.parsed_note.content)
         self.assertFalse(mocked_get.called)
         self.assertFalse(mocked_update.called)
 
@@ -458,7 +475,8 @@ class TestNote(TestModel):
         self.parsed_note.updated_at = '2014-09-22 19:43:59'
         self.parsed_note.update()
         self.assertFalse(mocked_create.called)
-        mocked_get.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.id)
+        mocked_get.assert_called_with(self.parsed_note.notebook.id,
+                                      self.parsed_note.id)
         mocked_update.assert_called_with(self.parsed_note.to_json())
 
     @patch('paperworks.wrapper.api.create_note')
@@ -469,11 +487,13 @@ class TestNote(TestModel):
         self.parsed_note.updated_at = '2014-09-14 19:43:59'
         self.parsed_note.update()
         self.assertFalse(mocked_create.called)
-        mocked_get.assert_called_with(self.parsed_note.notebook.id, self.parsed_note.id)
+        mocked_get.assert_called_with(self.parsed_note.notebook.id,
+                                      self.parsed_note.id)
         self.assertFalse(mocked_update.called)
         self.assertEqual(self.parsed_note.title, note['title'])
         self.assertEqual(self.parsed_note.content, note['content'])
         self.assertEqual(self.parsed_note.updated_at, note['updated_at'])
+
 
 class TestTag(TestModel):
     def test_creation(self):
@@ -481,7 +501,8 @@ class TestTag(TestModel):
         self.create_test(tag, tag_title)
 
     def test_to_json(self):
-        self.to_json_test(models.Tag(tag_title, tag_id).to_json(), tag_title, tag_id)
+        self.to_json_test(models.Tag(tag_title, tag_id).to_json(),
+                          tag_title, tag_id)
 
     def test_from_json(self):
         self.tag = models.Tag.from_json(tag)

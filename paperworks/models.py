@@ -1,12 +1,11 @@
 from paperworks import wrapper
 import logging
-import os
-import json
 
 logger = logging.getLogger('models')
 
+
 class Model:
-    def __init__(self, title, id, paperwork = None, updated_at = ''):
+    def __init__(self, title, id, paperwork=None, updated_at=''):
         self.id = id
         self.title = title
         self.pw = paperwork
@@ -18,20 +17,21 @@ class Model:
     def to_json(self):
         """Return model as json-dict."""
         return {
-                'id': self.id,
-                'title': self.title
-                }
+            'id': self.id,
+            'title': self.title
+            }
 
     @classmethod
     def from_json(cls, json):
         """Creates model from json-dict."""
         return cls(
-                json['title'],
-                json['id']
-                )
+            json['title'],
+            json['id']
+            )
+
 
 class Notebook(Model):
-    def __init__(self, title, id = 0, paperwork = None, updated_at = ''):
+    def __init__(self, title, id=0, paperwork=None, updated_at=''):
         super().__init__(title, id, paperwork, updated_at)
         self.notes = set()
 
@@ -44,10 +44,10 @@ class Notebook(Model):
 
     @classmethod
     def from_json(cls, json):
-        return cls( #python2
-                json['title'],
-                json['id']
-                )
+        return cls(
+            json['title'],
+            json['id']
+            )
 
     def add_note(self, note):
         """Adds note to notebook. Returns note instance."""
@@ -57,9 +57,10 @@ class Notebook(Model):
         self.notes.add(note)
         return note
 
-    def create_note(self, title, content = ''):
-        """Creates note with given title and adds it to the notebook. Returns note instance."""
-        return self.add_note(Note(title, content = content))
+    def create_note(self, title, content=''):
+        """Creates note with given title and adds it to the
+        notebook. Returns note instance."""
+        return self.add_note(Note(title, content=content))
 
     def delete_note(self, note):
         """Deletes note from notebook."""
@@ -76,23 +77,32 @@ class Notebook(Model):
 
     # TODO (Nelo Wallus): Default force to true when api
     # response is fixed
-    def update(self, force = True):
-        """Updates local or remote notebook, depending on timestamp. Creates if notebook id is 0."""
+    def update(self, force=True):
+        """Updates local or remote notebook, depending on
+        timestamp. Creates if notebook id is 0."""
         if self.id == 0:
             self.id = self.pw.api.create_notebook(self.title)['id']
         else:
             remote = self.pw.api.get_notebook(self.id)
             if remote is None:
-                logger.error('Remote notebook could not be found. Wrong id or deleted.')
+                logger.error(
+                    'Remote notebook could not be found. Wrong id or deleted.')
             elif force or remote['updated_at'] < self.updated_at:
                 self.pw.api.update_notebook(self.to_json())
             else:
-                logger.info('Remote version is higher. Updating local notebook.')
+                logger.info(
+                    'Remote version is higher. Updating local notebook.')
                 self.title = remote['title']
                 self.updated_at = remote['updated_at']
 
+    def get_notes(self):
+        return list(self.notes).sort(key=lambda note: note.title)
+
+
 class Note(Model):
-    def __init__(self, title, id = 0, content = '', tags = set(), paperwork = None, updated_at = ''):
+    def __init__(
+            self, title, id=0, content='', tags=set(),
+            paperwork=None, updated_at=''):
         super().__init__(title, id, paperwork, updated_at)
         self.content = content
         # TODO (Nelo Wallus): This is ugly.
@@ -104,18 +114,18 @@ class Note(Model):
             'id': self.id,
             'title': self.title,
             'content': self.content,
-            'tags': [ tag.to_json() for tag in self.tags ],
+            'tags': [tag.to_json() for tag in self.tags],
             'notebook_id': self.notebook.id
             }
 
     @classmethod
     def from_json(cls, json):
         return cls(
-                json['title'],
-                json['id'],
-                json['content'],
-                updated_at = json['updated_at']
-                )
+            json['title'],
+            json['id'],
+            json['content'],
+            updated_at=json['updated_at']
+            )
 
     def add_tag(self, tag):
         """Adds tag to note. Sets reference to note in tag."""
@@ -137,8 +147,10 @@ class Note(Model):
 
     def move_to(self, notebook):
         """Moves note to given notebook instance."""
-        if None in (notebook, self.notebook) or 0 in (notebook.id, self.notebook.id, self.id):
-            logger.error('Error while moving note {} from {} to {}'.format(self, self.notebook, notebook))
+        if None in (notebook, self.notebook) or 0 in (
+                notebook.id, self.notebook.id, self.id):
+            logger.error('Error while moving note {} from {} to {}'.format(
+                self, self.notebook, notebook))
         else:
             self.pw.api.move_note(self.to_json(), notebook.id)
         self.notebook.delete_note(self)
@@ -152,16 +164,20 @@ class Note(Model):
             self.pw.api.delete_note(self.to_json())
         self.notebook.delete_note(self)
 
-    def update(self, force = False):
-        """Updates local or remote note, depending on timestamp. Creates if note id is 0."""
+    def update(self, force=False):
+        """Updates local or remote note, depending on
+        timestamp. Creates if note id is 0."""
         if self.id == 0:
-            self.id = self.pw.api.create_note(self.notebook.id, self.title, self.content)['id']
+            self.id = self.pw.api.create_note(
+                self.notebook.id, self.title, self.content)['id']
         else:
             remote = self.pw.api.get_note(self.notebook.id, self.id)
             if remote is None:
-                logger.error('Remote note could not be found. Wrong id, deleted or moved to another notebook.')
+                logger.error('Remote note could not be found. Wrong id,'
+                             'deleted or moved to another notebook')
             elif remote['updated_at'] <= self.updated_at or force:
-                logger.info('Remote version is lower or force update. Updating remote note.')
+                logger.info('Remote version is lower or force update.'
+                            'Updating remote note.')
                 self.pw.api.update_note(self.to_json())
             else:
                 logger.info('Remote version is higher. Updating local note.')
@@ -174,8 +190,9 @@ class Note(Model):
                 for tag in remote['tags']:
                     self.add_tag(self.pw.find_or_create_tag(tag['title']))
 
+
 class Tag(Model):
-    def __init__(self, title, id = 0, visibility = 0, notes = set(), paperwork = None):
+    def __init__(self, title, id=0, visibility=0, notes=set(), paperwork=None):
         super().__init__(title, id, paperwork)
         self.visibility = visibility
         self.notes = notes
@@ -190,19 +207,24 @@ class Tag(Model):
     @classmethod
     def from_json(cls, json):
         return cls(
-                json['title'],
-                json['id'],
-                json['visibility']
-                )
+            json['title'],
+            json['id'],
+            json['visibility']
+            )
+
+    def get_notes(self):
+        return list(self.notes).sort(key=lambda note: note.title)
+
 
 class Paperwork:
-    def __init__(self, user, passwd, host = 'http://demo.paperwork.rocks/'):
+    def __init__(self, user, passwd, host='http://demo.paperwork.rocks/'):
         self.notebooks = set()
         self.tags = set()
         self.api = wrapper.api(user, passwd, host)
 
     def add_notebook(self, notebook):
-        """Add a notebook to the paperwork instance. Returns notebook instance."""
+        """Add a notebook to the paperwork instance. Returns
+        notebook instance."""
         if isinstance(notebook, str):
             notebook = Notebook(notebook)
         logger.info('Added notebook {}'.format(notebook))
@@ -220,13 +242,13 @@ class Paperwork:
         return tag
 
     def get_notes(self):
-        return [ note for notebook in self.notebooks for note in notebook.notes ]
+        return [note for notebook in self.notebooks for note in notebook.notes]
 
     def get_notebooks(self):
-        return list(self.notebooks)
+        return list(self.notebooks).sort(key=lambda nb: nb.title)
 
     def get_tags(self):
-        return list(self.tags)
+        return list(self.tags).sort(key=lambda tag: tag.title)
 
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
@@ -256,7 +278,10 @@ class Paperwork:
             notes_json = self.api.list_notebook_notes(nb.id)
             for note_json in notes_json:
                 note = Note.from_json(note_json)
-                note.add_tags( [ self.find_or_create_tag(tag['title']) for tag in note_json['tags'] ] )
+                note.add_tags(
+                    [self.find_or_create_tag(tag['title'])
+                        for tag in note_json['tags']]
+                    )
                 nb.add_note(note)
 
     def update(self):
@@ -296,9 +321,3 @@ class Paperwork:
         for json_note in json_notes:
             self.find_note(json_note['id'])
         return notes
-
-
-
-
-
-

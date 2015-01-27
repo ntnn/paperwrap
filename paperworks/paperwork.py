@@ -2,7 +2,8 @@
 
 from paperworks import models
 from getpass import getpass
-import os, sys
+import os
+import sys
 import logging
 from fuzzywuzzy import fuzz
 import yaml
@@ -14,6 +15,7 @@ if sys.version[0] < 3:
 logger = logging.getLogger('paperwork')
 
 pw = None
+
 
 def login():
     global pw
@@ -30,11 +32,14 @@ def login():
         passwd = getpass('Password:')
     pw = models.Paperwork(user, passwd, host)
 
+
 def download():
     pw.download()
 
+
 def update():
     pw.update()
+
 
 def print_all():
     for nb in pw.notebooks:
@@ -42,9 +47,11 @@ def print_all():
         for note in nb.notes:
             print("- {}".format(note.title))
 
+
 def print_notes():
     for note in pw.get_notes():
         print(note.title)
+
 
 def choose(title, choices):
     top_choice = (0, None)
@@ -55,19 +62,24 @@ def choose(title, choices):
     logger.info('Fuzzy chose {} as top choice'.format(top_choice[1]))
     return top_choice[1]
 
+
 def choose_note(title):
     return choose(title, pw.get_notes())
+
 
 def choose_notebook(title):
     return choose(title, pw.notebooks)
 
+
 def choose_note_and_notebook(title):
     return choose(title, pw.get_notes() + pw.get_notebooks())
+
 
 def choose_tag(title):
     return choose(title, pw.tags)
 
-def prompt(text, important = False):
+
+def prompt(text, important=False):
     answers = ('y', 'Y', 'yes', 'Yes', 'YES')
     if important:
         text = text + ' y/N'
@@ -78,6 +90,7 @@ def prompt(text, important = False):
     if answer in answers:
         return True
     return False
+
 
 def edit(title):
     note = choose_note(title)
@@ -100,6 +113,7 @@ def edit(title):
     logger.info('Removing temporary file')
     os.remove(tempfile)
 
+
 def delete(title):
     elem = choose_note_and_notebook(title)
     elem_type = 'note' if isinstance(elem, models.Note) else 'notebook'
@@ -107,12 +121,14 @@ def delete(title):
         logging.info('Deleting elem {}'.format(elem))
         elem.delete()
 
+
 def move(args):
     args = args.split('to')
     note = choose_note(args[0])
     notebook = choose_notebook(args[1])
     if prompt('Move note {} to {}?'.format(note.title, notebook.title)):
         note.move_to(notebook)
+
 
 def create(args):
     if ' in ' in args:
@@ -126,9 +142,11 @@ def create(args):
         if prompt('Create notebook {}?'.format(nb_title)):
             pw.add_notebook(nb_title)
 
+
 def tags():
     for tag in pw.tags:
         print(tag.title)
+
 
 def tag(args):
     if ' with ' in args:
@@ -142,14 +160,17 @@ def tag(args):
         if prompt('Create tag {}?'.format(tag_title)):
             pw.add_tag(tag_title)
 
+
 def tagged(tag_title):
     tag = choose_tag(tag_title)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:
         print(note.title)
 
+
 def print_help():
-    print("""The commands are self-explanatory. Notes and notebooks are chosen through a fuzzy search.
+    print("""The commands are self-explanatory. Notes and
+    notebooks are chosen through a fuzzy search.
 
 update
 ls
@@ -166,25 +187,27 @@ exit
 """)
 
 cmd_dict = {
-        'update': update,
-        'ls': print_all,
-        'edit': edit,
-        'delete': delete,
-        'move': move,
-        'create': create,
-        'tags': tags,
-        'tag': tag,
-        'tagged': tagged,
-        'help': print_help
-        }
+    'update': update,
+    'ls': print_all,
+    'edit': edit,
+    'delete': delete,
+    'move': move,
+    'create': create,
+    'tags': tags,
+    'tag': tag,
+    'tagged': tagged,
+    'help': print_help
+    }
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", help="verbose output", action="store_true")
+    parser.add_argument(
+        "-v", "--verbose", help="verbose output", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level = logging.INFO)
+        logging.basicConfig(level=logging.INFO)
     login()
     download()
 
