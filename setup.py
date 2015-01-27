@@ -14,7 +14,7 @@ with open(path.join(here, package_name, 'wrapper.py'), 'r') as f:
 
 if __name__ == "__main__":
     #part taken from https://github.com/gbin/err/blob/master/setup.py#L54-68
-    if sys.version_info[:2][0] == 2:
+    if sys.version_info[0] < 3:
         try:
             from lib3to2 import main as three2two
         except ImportError:
@@ -53,10 +53,9 @@ if __name__ == "__main__":
             'console_scripts': [ 'paperwork = paperworks.paperwork:main' ]
             },
 
-        install_requires = [ 'PyYAML', 'fuzzywuzzy' ],
+        install_requires = [ 'PyYAML', 'fuzzywuzzy', 'python-Levenshtein' ],
 
         keywords = 'paperwork rocks twostairs api wrapper',
 
         packages = find_packages(exclude = [ 'test' ])
     )
-

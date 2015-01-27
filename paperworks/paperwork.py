@@ -2,11 +2,14 @@
 
 from paperworks import models
 from getpass import getpass
-import os
+import os, sys
 import logging
 from fuzzywuzzy import fuzz
 import yaml
 import argparse
+
+if sys.version[0] < 3:
+    input = raw_input
 
 logger = logging.getLogger('paperwork')
 

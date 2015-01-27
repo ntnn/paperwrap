@@ -2,10 +2,10 @@
 #Author: Nelo Wallus, http://github.com/ntnn
 
 import sys
-if sys.version_info[:2][0] == 2:
-    from urllib2 import Request, urlopen
-else:
+try:
     from urllib.request import Request, urlopen
+except ImportError:
+    from urllib2 import Request, urlopen
 from base64 import b64encode
 import logging
 import json
@@ -57,7 +57,7 @@ class api:
                 data = json.dumps(data).encode('ASCII')
             uri = self.host + api_version + api_path[keyword].format(*args)
             request = Request(uri, data, self.headers)
-            request.get_method = lambda: method #python2
+            request.get_method = lambda: method
             logger.info('{} request to {} with {}'.format(method, uri, data))
             res = urlopen(request)
             json_res = json.loads(res.read().decode('ASCII'))
