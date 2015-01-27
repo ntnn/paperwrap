@@ -8,7 +8,7 @@ from fuzzywuzzy import fuzz
 import yaml
 import argparse
 
-if sys.version[0] < 3:
+if str(sys.version[0]) < '3':
     input = raw_input
 
 logger = logging.getLogger('paperwork')
