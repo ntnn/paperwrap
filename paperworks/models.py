@@ -225,6 +225,9 @@ class Paperwork:
     def get_notebooks(self):
         return list(self.notebooks)
 
+    def get_tags(self):
+        return list(self.tags)
+
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
         if 'visibility' in json.keys():
@@ -281,3 +284,21 @@ class Paperwork:
         for notebook in self.notebooks:
             if key in (notebook.id, notebook.title):
                 return notebook
+
+    def find_note(self, key):
+        for note in self.get_notes():
+            if key in (note.id, note.title):
+                return note
+
+    def search(self, key):
+        json_notes = self.api.search(key)
+        notes = []
+        for json_note in json_notes:
+            self.find_note(json_note['id'])
+        return notes
+
+
+
+
+
+
