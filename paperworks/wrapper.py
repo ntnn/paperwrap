@@ -12,7 +12,7 @@ import json
 
 logger = logging.getLogger('paperwork-wrapper')
 
-__version__ = '0.11'
+__version__ = '0.12'
 api_version = '/api/v1/'
 user_agent = 'paperwork.py v{}'.format(__version__)
 
