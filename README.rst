@@ -1,5 +1,5 @@
-paperwork python API wrapper and client
-=======================================
+Paperwork API Wrapper and Command Line Client
+=============================================
 
 | |Build Status|
 | `paperwork <https://github.com/twostairs/paperwork>`__ is 'an open
@@ -13,15 +13,16 @@ PyPI entry: `paperworks <https://pypi.python.org/pypi/paperworks/>`__
 | ``wrapper.py`` is the actual api-wrapper.
 | ``models.py`` contains classes for paperwork-instances, noteboooks,
 notes and tags.
-| ``paperwork.py`` is a command-line client.
+| ``paperworks.py`` is a command-line client.
 
-CLI
-===
+Command Line Interface
+======================
 
-``paperwork`` searches for the file ``~/.paperworkrc`` and, if found,
-reads host, username and password - if the file is not found the client
-prompts for values. A template can be found in the file
-``paperworkrc.template``.
+``paperworks`` connects to the remote host and provides a command line
+interface to manage the notes. If a file ``.paperworkrc`` in ``$HOME``
+exists ``paperworks`` parses the credentials. If no such file exists the
+credentials can be entered via prompt. ``help`` will display the
+vailable commands.
 
 .. |Build Status| image:: https://travis-ci.org/ntnn/paperwork.py.svg?branch=master
    :target: https://travis-ci.org/ntnn/paperwork.py
