@@ -1,7 +1,6 @@
-#License: MIT
-#Author: Nelo Wallus, http://github.com/ntnn
+# License: MIT
+# Author: Nelo Wallus, http://github.com/ntnn
 
-import sys
 try:
     from urllib.request import Request, urlopen
 except ImportError:
@@ -13,47 +12,55 @@ import json
 
 logger = logging.getLogger('paperwork-wrapper')
 
-__version__ = '0.12'
+__version__ = '0.13'
 api_version = '/api/v1/'
 user_agent = 'paperwork.py v{}'.format(__version__)
 
 api_path = {
-        'notebooks':   'notebooks',
-        'notebook':    'notebooks/{}',
-        'notes':       'notebooks/{}/notes',
-        'note':        'notebooks/{}/notes/{}',
-        'move':        'notebooks/{}/notes/{}/move/{}',
-        'versions':    'notebooks/{}/notes/{}/versions',
-        'version':     'notebooks/{}/notes/{}/versions/{}',
-        'attachments': 'notebooks/{}/notes/{}/versions/{}/attachments',
-        'attachment':  'notebooks/{}/notes/{}/versions/{}/attachments/{}',
-        'tags':        'tags',
-        'tag':         'tags/{}',
-        'tagged':      'tagged/{}',
-        'search':      'search/{}',
-        'i18n':        'i18n',
-        'i18nkey':     'i18n/{}'
-        }
+    'notebooks':   'notebooks',
+    'notebook':    'notebooks/{}',
+    'notes':       'notebooks/{}/notes',
+    'note':        'notebooks/{}/notes/{}',
+    'move':        'notebooks/{}/notes/{}/move/{}',
+    'versions':    'notebooks/{}/notes/{}/versions',
+    'version':     'notebooks/{}/notes/{}/versions/{}',
+    'attachments': 'notebooks/{}/notes/{}/versions/{}/attachments',
+    'attachment':  'notebooks/{}/notes/{}/versions/{}/attachments/{}',
+    'tags':        'tags',
+    'tag':         'tags/{}',
+    'tagged':      'tagged/{}',
+    'search':      'search/{}',
+    'i18n':        'i18n',
+    'i18nkey':     'i18n/{}'
+    }
+
 
 def b64(string):
     """Returns given string as base64 hash."""
     return b64encode(string.encode('UTF-8')).decode('ASCII')
 
+
 class api:
-    def __init__(self, user, passwd, uri = 'http://demo.paperwork.rocks/', user_agent = user_agent):
+    def __init__(
+            self,
+            user,
+            passwd,
+            uri='http://demo.paperwork.rocks/',
+            user_agent=user_agent):
         self.host = uri if 'http://' in uri else 'http://' + uri
         self.headers = {
-                'Application-Type': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + b64('{}:{}'.format(user, passwd)),
-                'Connection': 'keep-alive',
-                'User-Agent': user_agent
-                }
+            'Application-Type': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + b64('{}:{}'.format(user, passwd)),
+            'Connection': 'keep-alive',
+            'User-Agent': user_agent
+            }
 
     def request(self, data, method, keyword, *args):
-        """Sends a request to the host and returns the parsed json data if successfull."""
+        """Sends a request to the host and returns the parsed json data
+        if successfull."""
         try:
-            if data: #python2
+            if data:
                 data = json.dumps(data).encode('ASCII')
             uri = self.host + api_version + api_path[keyword].format(*args)
             request = Request(uri, data, self.headers)
@@ -90,7 +97,8 @@ class api:
 
     def create_notebook(self, name):
         """Create new notebook with name."""
-        return self.post({'type': 0, 'title': name, 'shortcut':''}, 'notebooks')
+        return self.post(
+            {'type': 0, 'title': name, 'shortcut': ''}, 'notebooks')
 
     def get_notebook(self, notebook_id):
         """Returns notebook."""
@@ -108,9 +116,10 @@ class api:
         """Returns notes in notebook in a list."""
         return self.get('notes', notebook_id)
 
-    def create_note(self, notebook_id, note_title, content = ''):
+    def create_note(self, notebook_id, note_title, content=''):
         """Creates note with note_title in notebook. Returns note."""
-        return self.post({'title': note_title, 'content': content}, 'notes', notebook_id)
+        return self.post(
+            {'title': note_title, 'content': content}, 'notes', notebook_id)
 
     def get_note(self, notebook_id, note_id):
         """Returns note with note_id from notebook with notebook_id."""
@@ -118,7 +127,8 @@ class api:
 
     def get_notes(self, notebook_id, note_ids):
         """Returns note with note_id from notebook with notebook_id."""
-        return self.get('note', notebook_id, ','.join([ str(note_id) for note_id in note_ids ]))
+        return self.get('note', notebook_id, ','.join(
+            [str(note_id) for note_id in note_ids]))
 
     def update_note(self, note):
         """Updates note and returns meta info."""
@@ -130,7 +140,8 @@ class api:
 
     def delete_notes(self, notes):
         """Deletes note and returns meta info."""
-        return self.delete('note', notes[0]['notebook_id'], ','.join([ note['id'] for note in notes ]))
+        return self.delete('note', notes[0]['notebook_id'], ','.join(
+            [note['id'] for note in notes]))
 
     def move_note(self, note, new_notebook_id):
         """Moves note to new_notebook_id and returns meta info."""
@@ -138,25 +149,47 @@ class api:
 
     def move_notes(self, notes, new_notebook_id):
         """Moves notes to new_notebook_id and returns meta info."""
-        return self.get('move', notes[0]['notebook_id'], ','.join([ note['id'] for note in notes ]), new_notebook_id)
+        return self.get('move', notes[0]['notebook_id'], ','.join(
+            [note['id'] for note in notes]), new_notebook_id)
 
     def list_note_versions(self, note):
+        """Returns a list of versions of given note."""
         return self.list_notes_versions([note])
 
     def list_notes_versions(self, notes):
-        return self.get('versions', notes[0]['notebook_id'], ','.join([ note['id'] for note in notes ]))
+        """Returns lists of versions of given notes."""
+        return self.get('versions', notes[0]['notebook_id'], ','.join(
+            [note['id'] for note in notes]))
 
     def get_note_version(self, note, version_id):
+        """Returns version with version_id of note."""
         return self.get('version', note['notebook_id'], note['id'], version_id)
 
     def list_note_attachments(self, note):
-        return self.get('attachments', note['notebook_id'], note['id'], note['versions'][0]['id'])
+        """List attachments to note."""
+        return self.get(
+            'attachments',
+            note['notebook_id'],
+            note['id'],
+            note['versions'][0]['id'])
 
     def get_note_attachment(self, note, attachment_id):
-        return self.get('attachment', note['notebook_id'], note['id'], note['versions'][0]['id'], attachment_id)
+        """Returns attachment with attachment_id of note."""
+        return self.get(
+            'attachment',
+            note['notebook_id'],
+            note['id'],
+            note['versions'][0]['id'],
+            attachment_id)
 
     def delete_note_attachment(self, note, attachment_id):
-        return self.delete('attachment', note['notebook_id'], note['id'], note['versions'][0]['id'], attachment_id)
+        """Deletes attachment with attachment_id on note."""
+        return self.delete(
+            'attachment',
+            note['notebook_id'],
+            note['id'],
+            note['versions'][0]['id'],
+            attachment_id)
 
     # TODO (Nelo Wallus): Create method
     def upload_attachment(self, note, attachment):
@@ -178,9 +211,8 @@ class api:
         """Search for notes containing given keyword."""
         return self.get('search', b64(keyword))
 
-    def i18n(self, keyword = None):
+    def i18n(self, keyword=None):
         """Returns either the full i18n dict or the requested word."""
         if keyword:
             return self.get('i18nkey', keyword)
         return self.get('i18n')
-
