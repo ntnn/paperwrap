@@ -1,4 +1,5 @@
 from paperworks import wrapper
+from fuzzywuzzy import fuzz
 import logging
 
 logger = logging.getLogger('models')
@@ -96,7 +97,7 @@ class Notebook(Model):
                 self.updated_at = remote['updated_at']
 
     def get_notes(self):
-        return list(self.notes).sort(key=lambda note: note.title)
+        return sorted(self.notes, key=lambda note: note.title)
 
 
 class Note(Model):
@@ -213,7 +214,8 @@ class Tag(Model):
             )
 
     def get_notes(self):
-        return list(self.notes).sort(key=lambda note: note.title)
+        """Returns notes in a sorted list."""
+        return sorted(self.notes, key=lambda note: note.title)
 
 
 class Paperwork:
@@ -242,13 +244,17 @@ class Paperwork:
         return tag
 
     def get_notes(self):
-        return [note for notebook in self.notebooks for note in notebook.notes]
+        """Returns notes in a sorted list."""
+        return sorted([note for nb in self.notebooks for note in nb.notes],
+                      key=lambda note: note.title)
 
     def get_notebooks(self):
-        return list(self.notebooks).sort(key=lambda nb: nb.title)
+        """Returns notebooks in a sorted list."""
+        return sorted(self.notebooks, key=lambda nb: nb.title)
 
     def get_tags(self):
-        return list(self.tags).sort(key=lambda tag: tag.title)
+        """Returns tags in a sorted list."""
+        return sorted(self.tags, key=lambda tag: tag.title)
 
     def parse_json(self, json):
         """Parse given json into tag, note or notebook."""
@@ -311,11 +317,34 @@ class Paperwork:
                 return notebook
 
     def find_note(self, key):
+        """Find note with key (id or title)."""
         for note in self.get_notes():
             if key in (note.id, note.title):
                 return note
 
+    def fuzzy_find(self, title, choices):
+        """Fuzzy find for title in choices. Returns highest match."""
+        top_choice = (0, None)
+        for choice in choices:
+            val = fuzz.ratio(choice.title, title)
+            if val > top_choice[0]:
+                top_choice = (val, choice)
+        return top_choice[1]
+
+    def fuzzy_find_tag(self, title):
+        """Fuzzy search for tag with given title."""
+        return self.fuzzy_find(title, self.get_tags())
+
+    def fuzzy_find_notebook(self, title):
+        """Fuzzy search for notebook with given title."""
+        return self.fuzzy_find(title, self.get_notebooks())
+
+    def fuzzy_find_note(self, title):
+        """Fuzze search for note with given title."""
+        return self.fuzzy_find(title, self.get_notes())
+
     def search(self, key):
+        """Searches for given key and returns note-instances."""
         json_notes = self.api.search(key)
         notes = []
         for json_note in json_notes:

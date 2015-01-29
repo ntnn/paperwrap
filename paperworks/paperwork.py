@@ -5,7 +5,6 @@ from getpass import getpass
 import os
 import sys
 import logging
-from fuzzywuzzy import fuzz
 import yaml
 import argparse
 
@@ -18,6 +17,8 @@ pw = None
 
 
 def login():
+    """Creates Paperwork instance.
+    Reads credentials from rc-file or prompts."""
     global pw
     rc = os.environ.get('HOME')+'/.paperworkrc'
     if os.path.exists(rc):
@@ -34,17 +35,19 @@ def login():
 
 
 def download():
+    """Fills Paperwork instance with information from server."""
     pw.download()
 
 
 def update():
+    """Synchronizes local and remote information."""
     pw.update()
 
 
 def print_all():
-    for nb in pw.notebooks:
+    for nb in pw.get_notebooks():
         print(nb.title)
-        for note in nb.notes:
+        for note in nb.get_notes():
             print("- {}".format(note.title))
 
 
@@ -53,46 +56,40 @@ def print_notes():
         print(note.title)
 
 
-def choose(title, choices):
-    top_choice = (0, None)
-    for choice in choices:
-        val = fuzz.ratio(choice.title, title)
-        if val > top_choice[0]:
-            top_choice = (val, choice)
-    logger.info('Fuzzy chose {} as top choice'.format(top_choice[1]))
-    return top_choice[1]
-
-
 def choose_note(title):
-    return choose(title, pw.get_notes())
+    return pw.fuzzy_find_note(title)
 
 
 def choose_notebook(title):
-    return choose(title, pw.notebooks)
+    return pw.fuzzy_find_notebook(title)
 
 
 def choose_note_and_notebook(title):
-    return choose(title, pw.get_notes() + pw.get_notebooks())
+    return pw.fuzzy_find(title, pw.get_notes() + pw.get_notebooks())
 
 
 def choose_tag(title):
-    return choose(title, pw.tags)
+    return pw.fuzzy_find_tag(title)
 
 
 def prompt(text, important=False):
+    """Prompts user for confirmation.
+    If important is true, pressing 'Enter' means no."""
     answers = ('y', 'Y', 'yes', 'Yes', 'YES')
     if important:
         text = text + ' y/N'
     else:
         text = text + ' Y/n'
         answers += ('',)
-    answer = getpass(text)
+    answer = input(text + ' ')
     if answer in answers:
         return True
     return False
 
 
+# TODO (Nelo Wallus): Use tempfile instead of physical.
 def edit(title):
+    """Edit note with title."""
     note = choose_note(title)
     logger.info('Getting $EDITOR')
     editor = os.environ.get('EDITOR')
@@ -115,6 +112,7 @@ def edit(title):
 
 
 def delete(title):
+    """Delete note or notebook with title."""
     elem = choose_note_and_notebook(title)
     elem_type = 'note' if isinstance(elem, models.Note) else 'notebook'
     if prompt('Delete {} {}?'.format(elem_type, elem.title), True):
@@ -123,6 +121,7 @@ def delete(title):
 
 
 def move(args):
+    """Move a note to another notebook."""
     args = args.split('to')
     note = choose_note(args[0])
     notebook = choose_notebook(args[1])
@@ -131,6 +130,7 @@ def move(args):
 
 
 def create(args):
+    """Creates note or notebook, depending on input."""
     if ' in ' in args:
         args = args.split(' in ')
         note_title = args[0]
@@ -144,11 +144,13 @@ def create(args):
 
 
 def tags():
-    for tag in pw.tags:
+    """Lists tags."""
+    for tag in pw.get_tags():
         print(tag.title)
 
 
 def tag(args):
+    """Create a tag or tag a note with a tag, depending on input."""
     if ' with ' in args:
         args = args.split(' with ')
         note = choose_note(args[0])
@@ -162,6 +164,7 @@ def tag(args):
 
 
 def tagged(tag_title):
+    """Print notes tagged with tag."""
     tag = choose_tag(tag_title)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:

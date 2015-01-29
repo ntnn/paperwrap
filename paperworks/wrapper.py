@@ -153,16 +153,20 @@ class api:
             [note['id'] for note in notes]), new_notebook_id)
 
     def list_note_versions(self, note):
+        """Returns a list of versions of given note."""
         return self.list_notes_versions([note])
 
     def list_notes_versions(self, notes):
+        """Returns lists of versions of given notes."""
         return self.get('versions', notes[0]['notebook_id'], ','.join(
             [note['id'] for note in notes]))
 
     def get_note_version(self, note, version_id):
+        """Returns version with version_id of note."""
         return self.get('version', note['notebook_id'], note['id'], version_id)
 
     def list_note_attachments(self, note):
+        """List attachments to note."""
         return self.get(
             'attachments',
             note['notebook_id'],
@@ -170,6 +174,7 @@ class api:
             note['versions'][0]['id'])
 
     def get_note_attachment(self, note, attachment_id):
+        """Returns attachment with attachment_id of note."""
         return self.get(
             'attachment',
             note['notebook_id'],
@@ -178,6 +183,7 @@ class api:
             attachment_id)
 
     def delete_note_attachment(self, note, attachment_id):
+        """Deletes attachment with attachment_id on note."""
         return self.delete(
             'attachment',
             note['notebook_id'],
