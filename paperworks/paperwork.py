@@ -11,7 +11,7 @@ import argparse
 if str(sys.version[0]) < '3':
     input = raw_input
 
-logger = logging.getLogger('paperwork')
+logger = logging.getLogger('paperworkcli')
 
 pw = None
 
@@ -31,7 +31,10 @@ def login():
         host = input('Host:')
         user = input('User:')
         passwd = getpass('Password:')
-    pw = Paperwork(user, passwd, host)
+    pw = Paperwork(host)
+    if not pw.basic_authentication(user, passwd):
+        print('Authentication failed.')
+        quit()
 
 
 def download():
