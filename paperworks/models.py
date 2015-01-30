@@ -6,11 +6,10 @@ logger = logging.getLogger('models')
 
 
 class Model:
-    def __init__(self, title, id, paperwork=None, updated_at=''):
+    def __init__(self, title, id, paperwork=None):
         self.id = id
         self.title = title
         self.pw = paperwork
-        self.updated_at = updated_at
 
     def __str__(self):
         return "{}:'{}'".format(self.id, self.title)
@@ -103,11 +102,12 @@ class Notebook(Model):
 class Note(Model):
     def __init__(self, title, id=0, content='', tags=set(),
                  paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork, updated_at)
+        super().__init__(title, id, paperwork)
         self.content = content
         # TODO (Nelo Wallus): This is ugly.
         self.tags = set()
         self.add_tags(tags)
+        self.updated_at = updated_at
 
     def to_json(self):
         return {
@@ -168,8 +168,8 @@ class Note(Model):
         """Updates local or remote note, depending on timestamp.
         Creates if note id is 0."""
         if self.id == 0:
-            self.id = self.pw.api.create_note(
-                self.notebook.id, self.title, self.content)['id']
+            self.updated_at = self.pw.api.create_note(
+                self.notebook.id, self.title, self.content)['updated_at']
         else:
             remote = self.pw.api.get_note(self.notebook.id, self.id)
             if remote is None:
@@ -178,7 +178,7 @@ class Note(Model):
             elif remote['updated_at'] <= self.updated_at or force:
                 logger.info('Remote version is lower or force update.'
                             'Updating remote note.')
-                self.pw.api.update_note(self.to_json())
+                self.updated_at = self.pw.api.update_note(self.to_json())['updated_at']
             else:
                 logger.info('Remote version is higher. Updating local note.')
                 self.title = remote['title']
@@ -189,6 +189,28 @@ class Note(Model):
                 # correct id if not available
                 for tag in remote['tags']:
                     self.add_tag(self.pw.find_or_create_tag(tag['title']))
+
+    def get_versions(self):
+        versions = self.pw.api.list_versions(self)
+        return [Version.from_json(version) for version in versions]
+
+
+class Version(Model):
+    def __init__(self, title, id, content, updated_at, previous_id):
+        super().__init__(title, id=id)
+        self.content = content
+        self.updated_at = updated_at
+        self.previous_id = previous_id
+
+    @classmethod
+    def from_json(cls, json):
+        return cls(
+            json['title'],
+            json['id'],
+            json['content'],
+            json['updated_at'],
+            json['previous_id']
+            )
 
 
 class Tag(Model):

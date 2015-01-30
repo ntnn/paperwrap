@@ -6,6 +6,7 @@ import sys
 import logging
 import yaml
 import argparse
+import tempfile
 
 if str(sys.version[0]) < '3':
     input = raw_input
@@ -90,28 +91,27 @@ def prompt(text, important=False):
     return False
 
 
-# TODO (Nelo Wallus): Use tempfile instead of physical.
 def edit(title):
     """Edit note with title."""
     note = choose_note(title)
     logger.info('Getting $EDITOR')
     editor = os.environ.get('EDITOR')
 
-    tempfile = '/tmp/paperwork-{}'.format(note.title)
+    tmpfile = tempfile.NamedTemporaryFile()
 
     logger.info('Writing content to temporary file')
-    with open(tempfile, 'w') as f:
+    with open(tmpfile, 'w') as f:
         f.write(note.content)
 
     logger.info('Launching system editor')
-    os.system("{} '{}'".format(editor, tempfile))
+    os.system("{} '{}'".format(editor, tmpfile.name))
 
     logger.info('Reading contents of temporary file')
-    with open(tempfile, 'r') as f:
+    with open(tmpfile, 'r') as f:
         note.content = f.read()
 
     logger.info('Removing temporary file')
-    os.remove(tempfile)
+    tmpfile.close()
 
 
 def delete(title):
@@ -175,22 +175,22 @@ def tagged(tag_title):
 
 
 def print_help():
-    print("""The commands are self-explanatory. Notes and
-    notebooks are chosen through a fuzzy search.
-
-update
-ls
-edit $note
-delete $title - takes effect on notes and notebooks
-move $note to $notebook
-create $note in $notebook - keyword 'in'
-create $notebook
-tags - print tags
-tag $note with $tag - tag $note with $tag
-tag $tag - create $tag
-tagged $tag - print notes tagged with $tag
-exit
-""")
+    print('The commands are self-explanatory. Notes and'
+          'notebooks are chosen through a fuzzy search.'
+          ''
+          'update'
+          'ls'
+          'edit $note'
+          'delete $title - takes effect on notes and notebooks'
+          'move $note to $notebook'
+          'create $note in $notebook - keyword "in"'
+          'create $notebook'
+          'tags - print tags'
+          'tag $note with $tag - tag $note with $tag'
+          'tag $tag - create $tag'
+          'tagged $tag - print notes tagged with $tag'
+          'exit'
+          )
 
 cmd_dict = {
     'update': update,
@@ -233,7 +233,7 @@ def main():
                 cmd_dict[cmd]()
         else:
             logger.info('Invalid command')
-            print('{} unkown'.format(cmd))
+            print('{} unknown'.format(cmd))
         cmd = input('>')
 
 if __name__ == "__main__":
