@@ -1,20 +1,19 @@
 # License: MIT
 # Author: Nelo Wallus, http://github.com/ntnn
 
+import logging
+import json
 try:
     from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import Request, urlopen
 from base64 import b64encode
-import logging
-import json
-
 
 logger = logging.getLogger('paperwork-wrapper')
 
 __version__ = '0.13'
 api_version = '/api/v1/'
-user_agent = 'paperwork.py v{}'.format(__version__)
+default_agent = 'paperwork.py api wrapper v{}'.format(__version__)
 
 api_path = {
     'notebooks':   'notebooks',
@@ -41,20 +40,24 @@ def b64(string):
 
 
 class api:
-    def __init__(
-            self,
-            user,
-            passwd,
-            uri='http://demo.paperwork.rocks/',
-            user_agent=user_agent):
-        self.host = uri if 'http://' in uri else 'http://' + uri
+    def __init__(self, user_agent=default_agent):
+        self.user_agent = user_agent
+
+    def basic_authentication(self, host, user, passwd):
+        """Basic authentication with host.
+        Returns false if connection fails."""
+        self.host = host if 'http://' in host else 'http://' + host
         self.headers = {
             'Application-Type': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': 'Basic ' + b64('{}:{}'.format(user, passwd)),
             'Connection': 'keep-alive',
-            'User-Agent': user_agent
+            'User-Agent': self.user_agent
             }
+        if self.request(None, 'GET', 'notebooks'):
+            return True
+        else:
+            return False
 
     def request(self, data, method, keyword, *args):
         """Sends a request to the host and returns the parsed json data

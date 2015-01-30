@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from paperworks.models import Paperwork
-from getpass import getpass
 import os
 import sys
 import logging
@@ -11,7 +10,7 @@ import argparse
 if str(sys.version[0]) < '3':
     input = raw_input
 
-logger = logging.getLogger('paperwork')
+logger = logging.getLogger('paperworkcli')
 
 pw = None
 
@@ -28,10 +27,14 @@ def login():
         user = conf['user']
         passwd = conf['pass']
     else:
+        from getpass import getpass
         host = input('Host:')
         user = input('User:')
         passwd = getpass('Password:')
     pw = Paperwork(user, passwd, host)
+    if not pw.authenticated:
+        print('User/password not valid or host not reachable.')
+        sys.exit()
 
 
 def download():
