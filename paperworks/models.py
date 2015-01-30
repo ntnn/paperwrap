@@ -32,8 +32,9 @@ class Model:
 
 class Notebook(Model):
     def __init__(self, title, id=0, paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork, updated_at)
+        super().__init__(title, id, paperwork)
         self.notes = set()
+        self.updated_at = updated_at
 
     def to_json(self):
         return {
@@ -62,8 +63,8 @@ class Notebook(Model):
         notebook. Returns note instance."""
         return self.add_note(Note(title, content=content))
 
-    def delete_note(self, note):
-        """Deletes note from notebook."""
+    def remove_note(self, note):
+        """Removes note from notebook. Does not delete note from server."""
         logger.info('Removing note {} to notebook {}'.format(note, self))
         note.notebook = None
         self.notes.discard(note)
@@ -168,8 +169,9 @@ class Note(Model):
         """Updates local or remote note, depending on timestamp.
         Creates if note id is 0."""
         if self.id == 0:
-            self.updated_at = self.pw.api.create_note(
-                self.notebook.id, self.title, self.content)['updated_at']
+            resp = self.pw.api.create_note(self.notebook.id, self.title, self.content)
+            self.id = resp['id']
+            self.updated_at = resp['updated_at']
         else:
             remote = self.pw.api.get_note(self.notebook.id, self.id)
             if remote is None:
