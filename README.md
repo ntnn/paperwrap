@@ -8,11 +8,11 @@ Tests can be run with `./run_tests.py`.
 PyPI entry: [paperworks](https://pypi.python.org/pypi/paperworks/) 
 
 `wrapper.py` is the actual api-wrapper.  
-`models.py` contains classes for paperwork-instances, noteboooks, notes and tags.  
-`paperworks.py` is a command-line client.
+`models.py` contains classes for paperwork-instances, notebooks, notes and tags.  
+`paperwork.py` is a command-line client with the entry-point `paperworks`.
 
 #Command Line Interface  
 `paperworks` connects to the remote host and provides a command line interface to manage the notes. 
 If a file `.paperworkrc` in `$HOME` exists `paperworks` parses the credentials. If no such file exists the credentials can be entered via prompt.
-`help` will display the vailable commands. 
+`help` will display the available commands. 
 
