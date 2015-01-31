@@ -253,10 +253,11 @@ class Paperwork:
         notebook instance."""
         if not isinstance(notebook, Notebook):
             notebook = Notebook(notebook)
-        logger.info('Added notebook {}'.format(notebook))
-        notebook.pw = self
-        self.notebooks.add(notebook)
-        return notebook
+        if notebook.title != 'All Notes':
+            logger.info('Added notebook {}'.format(notebook))
+            notebook.pw = self
+            self.notebooks.add(notebook)
+            return notebook
 
     def add_tag(self, tag):
         """Add a tag to the paperwork instance. Return tag instance."""
