@@ -121,8 +121,7 @@ class api:
 
     def create_note(self, notebook_id, note_title, content=''):
         """Creates note with note_title in notebook. Returns note."""
-        return self.post(
-            {'title': note_title, 'content': content}, 'notes', notebook_id)
+        return self.post({'title': note_title, 'content': content, 'content_preview': content[:15]}, 'notes', notebook_id)
 
     def get_note(self, notebook_id, note_id):
         """Returns note with note_id from notebook with notebook_id."""
