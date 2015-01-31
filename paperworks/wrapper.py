@@ -9,7 +9,7 @@ except ImportError:
     from urllib2 import Request, urlopen
 from base64 import b64encode
 
-logger = logging.getLogger('paperwork-wrapper')
+logger = logging.getLogger('pwwrapper')
 
 __version__ = '0.13'
 api_version = '/api/v1/'
