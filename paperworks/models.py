@@ -1,6 +1,7 @@
 from paperworks import wrapper
 from fuzzywuzzy import fuzz
 import logging
+import threading
 
 logger = logging.getLogger('models')
 
@@ -66,7 +67,6 @@ class Notebook(Model):
     def remove_note(self, note):
         """Removes note from notebook. Does not delete note from server."""
         logger.info('Removing note {} to notebook {}'.format(note, self))
-        note.notebook = None
         self.notes.discard(note)
 
     def delete(self):
@@ -75,6 +75,9 @@ class Notebook(Model):
             logger.error('Error while removing notebook {}'.format(self))
         else:
             self.pw.api.delete_notebook(self.id)
+        for note in self.get_notes():
+            self.remove_note(note)
+        self.pw.notebooks.discard(self)
 
     # TODO (Nelo Wallus): Default force to true when api
     # response is fixed
@@ -154,7 +157,8 @@ class Note(Model):
                 self, self.notebook, notebook))
         else:
             self.pw.api.move_note(self.to_json(), notebook.id)
-        self.notebook.delete_note(self)
+        if self.notebook:
+            self.notebook.remove_note(self)
         notebook.add_note(self)
 
     def delete(self):
@@ -163,7 +167,8 @@ class Note(Model):
             logger.error('Error while removing note {}'.format(self))
         else:
             self.pw.api.delete_note(self.to_json())
-        self.notebook.delete_note(self)
+        if self.notebook:
+            self.notebook.remove_note(self)
 
     def update(self, force=False):
         """Updates local or remote note, depending on timestamp.
