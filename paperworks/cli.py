@@ -49,32 +49,47 @@ def update():
 
 
 def print_all():
+    """Prints notebook and notes in alphabetical order."""
     for nb in pw.get_notebooks():
         print(nb.title)
         for note in nb.get_notes():
             print("- {}".format(note.title))
 
 
-def print_notes():
-    for note in pw.get_notes():
-        print(note.title)
-
-
 def choose_note(title):
+    """Finds note in paperwork.
+
+    :type title: str
+    :rtype: models.Note
+    """
     return pw.fuzzy_find_note(title)
 
 
 def choose_notebook(title):
+    """Finds notebook in paperwork.
+
+    :type title: str
+    :rtype: models.Notebook
+    """
     return pw.fuzzy_find_notebook(title)
 
 
 def choose_tag(title):
+    """Finds tag in paperwork.
+
+    :type title: str
+    :rtype: models.Tag
+    """
     return pw.fuzzy_find_tag(title)
 
 
 def prompt(text, important=False):
     """Prompts user for confirmation.
-    If important is true, pressing 'Enter' means no."""
+
+    :type text: str
+    :param bool important: If true the default answer is false.
+    :rtype: bool
+    """
     answers = ('y', 'Y', 'yes', 'Yes', 'YES')
     text += ' y/N' if important else ' Y/n'
     if not important:
@@ -86,7 +101,10 @@ def prompt(text, important=False):
 
 
 def edit(title):
-    """Edit note with title."""
+    """Edit note with title.
+
+    :type title: str
+    """
     note = choose_note(title)
     logger.info('Getting $EDITOR')
     editor = os.environ.get('EDITOR')
@@ -109,6 +127,12 @@ def edit(title):
 
 
 def split(args, splitter):
+    """Splits string with splitter and returns the resulting strings.
+
+    :type args: str
+    :type splitter: str
+    :rtype: str and str
+    """
     if splitter in args:
         return args.split(splitter)
     else:
@@ -116,7 +140,10 @@ def split(args, splitter):
 
 
 def delete(args):
-    """Delete note or notebook, depending on input."""
+    """Delete note or notebook, depending on input.
+
+    :type args: str
+    """
     note, notebook = split(args, ' in ')
     if notebook:
         note = choose_note(note)
@@ -130,7 +157,10 @@ def delete(args):
 
 
 def move(args):
-    """Move a note to another notebook."""
+    """Move a note to another notebook.
+
+    :type args: str
+    """
     note, notebook = split(args, ' to ')
     note = choose_note(note)
     notebook = choose_notebook(notebook)
@@ -139,7 +169,10 @@ def move(args):
 
 
 def create(args):
-    """Creates note or notebook, depending on input."""
+    """Creates note or notebook, depending on input.
+
+    :type args: str
+    """
     note, notebook = split(args, ' in ')
     if notebook:
         notebook = choose_notebook(notebook)
@@ -157,7 +190,10 @@ def tags():
 
 
 def tag(args):
-    """Create a tag or tag a note with a tag, depending on input."""
+    """Create a tag or tag a note with a tag, depending on input.
+
+    :type args: str
+    """
     if ' with ' in args:
         args = args.split(' with ')
         note = choose_note(args[0])
@@ -171,7 +207,10 @@ def tag(args):
 
 
 def tagged(tag_title):
-    """Print notes tagged with tag."""
+    """Print notes tagged with tag.
+
+    :type tag_title: str
+    """
     tag = choose_tag(tag_title)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:
