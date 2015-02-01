@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from paperworks.models import Paperwork
+from __future__ import print_function
+from paperworks.models import Paperwork, Note
 import os
 import sys
 import logging
@@ -68,10 +69,6 @@ def choose_notebook(title):
     return pw.fuzzy_find_notebook(title)
 
 
-def choose_note_and_notebook(title):
-    return pw.fuzzy_find(title, pw.get_notes() + pw.get_notebooks())
-
-
 def choose_tag(title):
     return pw.fuzzy_find_tag(title)
 
@@ -114,13 +111,18 @@ def edit(title):
     tmpfile.close()
 
 
-def delete(title):
-    """Delete note or notebook with title."""
-    elem = choose_note_and_notebook(title)
-    elem_type = 'note' if isinstance(elem, models.Note) else 'notebook'
-    if prompt('Delete {} {}?'.format(elem_type, elem.title), True):
-        logging.info('Deleting elem {}'.format(elem))
-        elem.delete()
+def delete(args):
+    """Delete note or notebook, depending on input."""
+    if ' in ' in args:
+        args = args.split(' in ')
+        note = choose_note(args[0])
+        notebook = choose_notebook(args[1])
+        if prompt('Delete note {} in {}?'.format(note.title, notebook.title)):
+            note.delete()
+    else:
+        notebook = choose_notebook(args)
+        if prompt('Delete notebook {}?'.format(notebook.title)):
+            pw.delete_notebook(notebook)
 
 
 def move(args):
@@ -143,7 +145,7 @@ def create(args):
     else:
         nb_title = args
         if prompt('Create notebook {}?'.format(nb_title)):
-            pw.add_notebook(nb_title)
+            pw.create_notebook(nb_title)
 
 
 def tags():
