@@ -108,41 +108,46 @@ def edit(title):
     tmpfile.close()
 
 
+def split(args, splitter):
+    if splitter in args:
+        return args.split(splitter)
+    else:
+        return args, None
+
+
 def delete(args):
     """Delete note or notebook, depending on input."""
-    if ' in ' in args:
-        args = args.split(' in ')
-        note = choose_note(args[0])
-        notebook = choose_notebook(args[1])
+    note, notebook = split(args, ' in ')
+    if notebook:
+        note = choose_note(note)
+        notebook = choose_notebook(notebook)
         if prompt('Delete note {} in {}?'.format(note.title, notebook.title)):
             note.delete()
     else:
-        notebook = choose_notebook(args)
+        notebook = choose_notebook(note)
         if prompt('Delete notebook {}?'.format(notebook.title)):
             pw.delete_notebook(notebook)
 
 
 def move(args):
     """Move a note to another notebook."""
-    args = args.split('to')
-    note = choose_note(args[0])
-    notebook = choose_notebook(args[1])
+    note, notebook = split(args, ' to ')
+    note = choose_note(note)
+    notebook = choose_notebook(notebook)
     if prompt('Move note {} to {}?'.format(note.title, notebook.title)):
         note.move_to(notebook)
 
 
 def create(args):
     """Creates note or notebook, depending on input."""
-    if ' in ' in args:
-        args = args.split(' in ')
-        note_title = args[0]
-        notebook = choose_notebook(args[1])
-        if prompt('Create note {} in {}?'.format(note_title, notebook.title)):
-            notebook.create_note(note_title)
+    note, notebook = split(args, ' in ')
+    if notebook:
+        notebook = choose_notebook(notebook)
+        if prompt('Create note {} in {}?'.format(note, notebook.title)):
+            notebook.create_note(note)
     else:
-        nb_title = args
-        if prompt('Create notebook {}?'.format(nb_title)):
-            pw.create_notebook(nb_title)
+        if prompt('Create notebook {}?'.format(note)):
+            pw.create_notebook(note)
 
 
 def tags():
