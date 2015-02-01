@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Model:
     def __init__(self, title, id, api):
-        self.id = id
+        self.id = int(id)
         self.title = title
         self.api = api
 
@@ -89,7 +89,7 @@ class Notebook(Model):
     def create_note(self, title):
         note = Note.create(title, self)
         self.notes[note.id] = note
-        logger.info('Created note {} in notebook {}'.format(note, self))
+        logger.info('Created note {} in {}'.format(note, self))
 
     def add_note(self, note):
         self.notes[note.id] = note
@@ -101,7 +101,7 @@ class Notebook(Model):
         for note_json in notes_json:
             note = Note.from_json(note_json, self)
             self.add_note(note)
-            note.add_tags([tags[tag['id']] for tag in note_json['tags']])
+            note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
 
 
 class Note(Model):
