@@ -76,10 +76,8 @@ def prompt(text, important=False):
     """Prompts user for confirmation.
     If important is true, pressing 'Enter' means no."""
     answers = ('y', 'Y', 'yes', 'Yes', 'YES')
-    if important:
-        text = text + ' y/N'
-    else:
-        text = text + ' Y/n'
+    text += ' y/N' if important else ' Y/n'
+    if not important:
         answers += ('',)
     answer = input(text + ' ')
     if answer in answers:
