@@ -1,7 +1,7 @@
 Paperwork API Wrapper and Command Line Client
 =============================================
 
-| |Build Status|
+| |Build Status| |Scrutinizer Code Quality|
 | `paperwork <https://github.com/twostairs/paperwork>`__ is 'an open
 source note-taking and archiving tool'.
 
@@ -27,3 +27,5 @@ available commands.
 
 .. |Build Status| image:: https://travis-ci.org/ntnn/paperwork.py.svg?branch=master
    :target: https://travis-ci.org/ntnn/paperwork.py
+.. |Scrutinizer Code Quality| image:: https://scrutinizer-ci.com/g/ntnn/paperwork.py/badges/quality-score.png?b=master
+   :target: https://scrutinizer-ci.com/g/ntnn/paperwork.py/?branch=master

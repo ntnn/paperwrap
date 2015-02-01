@@ -1,5 +1,6 @@
 #Paperwork API Wrapper and Command Line Client  
-[![Build Status](https://travis-ci.org/ntnn/paperwork.py.svg?branch=master)](https://travis-ci.org/ntnn/paperwork.py)  
+[![Build Status](https://travis-ci.org/ntnn/paperwork.py.svg?branch=master)](https://travis-ci.org/ntnn/paperwork.py)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ntnn/paperwork.py/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ntnn/paperwork.py/?branch=master)  
 [paperwork](https://github.com/twostairs/paperwork) is 'an open source note-taking and archiving tool'.
 
 Supported: python 2.7, 3.3+  
