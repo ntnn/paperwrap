@@ -2,6 +2,11 @@ from paperworks import wrapper
 from fuzzywuzzy import fuzz
 import logging
 
+try:
+    isinstance('string', basestring)
+except NameError:
+    basestring = str
+
 logger = logging.getLogger('models')
 
 
@@ -212,6 +217,7 @@ class Paperwork:
             notebook = Notebook.create(self.api, title)
             self.notebooks[notebook.id] = notebook
             logger.info('Created notebook {}'.format(notebook))
+            return notebook
 
     def delete_notebook(self, nb):
         nb.delete()
@@ -254,7 +260,7 @@ class Paperwork:
 
     def find_tag(self, key):
         """Finds tag with key (id or title)."""
-        if isinstance(key, str):
+        if isinstance(key, basestring):
             for tag in self.tags.values():
                 if key == tag.title:
                     return tag
@@ -263,7 +269,7 @@ class Paperwork:
 
     def find_notebook(self, key):
         """Find notebook with key (id or title)."""
-        if isinstance(key, str):
+        if isinstance(key, basestring):
             for nb in self.notebooks.values():
                 if key == nb.title:
                     return nb
