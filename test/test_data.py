@@ -110,7 +110,7 @@ keyword_b64 = 'dGVzdCBrZXl3b3Jk'
 user = 'testuser'
 passwd = 'testpassword'
 upasswd = 'dGVzdHVzZXI6dGVzdHBhc3N3b3Jk'
-uri = 'demo.paperwork.rocks'
+uri = 'test/uri'
 uri_correct = 'http://{}'.format(uri)
 agent = 'dummy agent'
 

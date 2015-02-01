@@ -10,7 +10,7 @@ except ImportError:
 
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
-        self.pw = models.Paperwork(user, passwd)
+        self.pw = models.Paperwork(user, passwd, uri)
         self.api = self.pw.api
 
     def tearDown(self):
