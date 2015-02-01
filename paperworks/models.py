@@ -233,9 +233,12 @@ class Paperwork:
 
         logger.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
-            notebook = Notebook.from_json(notebook, self.api)
-            self.notebooks[notebook.id] = notebook
-            notebook.download(self.tags)
+            if notebook['title'] != 'All Notes':
+                notebook = Notebook.from_json(notebook, self.api)
+                self.add_notebook(notebook)
+                notebook.download(self.tags)
+            else:
+                logger.info('Skipping notebook {}'.format(notebook))
 
     def update(self):
         """Updating notebooks and notes to host."""
