@@ -213,6 +213,10 @@ class Paperwork:
             self.notebooks[notebook.id] = notebook
             logger.info('Created notebook {}'.format(notebook))
 
+    def delete_notebook(self, nb):
+        nb.delete()
+        del(self.notebooks[nb.id])
+
     def add_notebook(self, notebook):
         if notebook.id != 0:
             self.notebooks[notebook.id] = notebook
