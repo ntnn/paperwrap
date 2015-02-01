@@ -165,8 +165,9 @@ class Note(Model):
     def delete(self):
         logger.info('Deleting note {} in notebook {}'.format(
             self, self.notebook))
+        if self.id in self.notebook.notes:
+            del(self.notebook.notes[self.id])
         self.api.delete_note(self.to_json())
-        del(self.notebook.notes[self.id])
 
     def add_tags(self, tags):
         for tag in tags:
