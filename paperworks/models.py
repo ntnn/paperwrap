@@ -258,29 +258,34 @@ class Paperwork:
             for note in nb.get_notes():
                 note.update()
 
+    def find(self, key, items):
+        """Finds key in given values."""
+        logger.info('Searching item for key {} of type {}'.format(
+            key, type(key)))
+        if isinstance(key, basestring):
+            for item in items:
+                if key == item.title:
+                    return item
+            logger.error('No item found for key {} of type {}'.format(
+                key, type(key)))
+        else:
+            return items[key]
+
     def find_tag(self, key):
         """Finds tag with key (id or title)."""
-        if isinstance(key, basestring):
-            for tag in self.tags.values():
-                if key == tag.title:
-                    return tag
-        else:
-            return self.tags[key]
+        return self.find(key, self.tags.values())
 
     def find_notebook(self, key):
         """Find notebook with key (id or title)."""
-        if isinstance(key, basestring):
-            for nb in self.notebooks.values():
-                if key == nb.title:
-                    return nb
-        else:
-            return self.notebooks[key]
+        return self.find(key, self.notebooks.values())
 
     def find_note(self, key):
         """Find note with key (id or title)."""
         for note in self.get_notes():
             if key in (note.id, note.title):
                 return note
+        logger.error('No note found for key {} of type {}'.format(
+            key, type(key)))
 
     def fuzzy_find(self, title, choices):
         """Fuzzy find for title in choices. Returns highest match."""
