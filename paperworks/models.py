@@ -129,9 +129,13 @@ class Note(Model):
     @classmethod
     def create(cls, title, notebook):
         logger.info('Creating note {} in notebook'.format(title, notebook))
-        return cls.from_json(
-            notebook.api.create_note(notebook.id, title),
-            notebook
+        res = notebook.api.create_note(notebook.id, title)
+        return cls(
+            title,
+            res['id'],
+            notebook,
+            '',
+            res['updated_at']
             )
 
     def update(self, force=False):
