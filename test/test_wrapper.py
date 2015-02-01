@@ -14,7 +14,8 @@ except ImportError:
 
 class TestRequests(unittest.TestCase):
     def setUp(self):
-        self.api = wrapper.api(user, passwd, uri, agent)
+        self.api = wrapper.api(agent)
+        self.api.basic_authentication(uri, user, passwd)
         self.patcher = patch('paperworks.wrapper.urlopen')
         self.mocked_urlopen = self.patcher.start()
 

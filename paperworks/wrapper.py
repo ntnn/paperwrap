@@ -101,7 +101,8 @@ class api:
     def create_notebook(self, name):
         """Create new notebook with name."""
         return self.post(
-            {'type': 0, 'title': name, 'shortcut': ''}, 'notebooks')
+            {'type': 0, 'title': name, 'shortcut': ''},
+            'notebooks')
 
     def get_notebook(self, notebook_id):
         """Returns notebook."""
@@ -120,8 +121,14 @@ class api:
         return self.get('notes', notebook_id)
 
     def create_note(self, notebook_id, note_title, content=''):
-        """Creates note with note_title in notebook. Returns note."""
-        return self.post({'title': note_title, 'content': content, 'content_preview': content[:15]}, 'notes', notebook_id)
+        """Creates note with note_title in notebook. Returns json response."""
+        content_preview = content[:15] if len(content) >= 15 else content
+        return self.post(
+            {'title': note_title,
+             'content': content,
+             'content_preview': content_preview},
+            'notes',
+            notebook_id)
 
     def get_note(self, notebook_id, note_id):
         """Returns note with note_id from notebook with notebook_id."""
