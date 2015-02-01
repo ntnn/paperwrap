@@ -283,9 +283,13 @@ class Paperwork:
         """Find note with key (id or title)."""
         logger.info('Searching note for key {} of type {}'.format(
             key, type(key)))
-        for note in self.get_notes():
-            if key in (note.id, note.title):
-                return note
+        if isinstance(key, basestring):
+            return self.find(key, self.get_notes())
+        else:
+            logger.info('key is int, finding through keys')
+            for nb in self.notebooks.values():
+                if key in nb.notes:
+                    return nb.notes[key]
         logger.error('No note found for key {} of type {}'.format(
             key, type(key)))
 
