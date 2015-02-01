@@ -86,11 +86,6 @@ class Notebook(Model):
         self.notes[note.id] = note
         logger.info('Created note {} in notebook {}'.format(note, self))
 
-    def delete_note(self, note):
-        note.delete()
-        self.notes.discard(note)
-        logger.info('Deleted note {} in {}'.foramt(note, self))
-
     def add_note(self, note):
         self.notes[note.id] = note
         logger.info('Added note {} to {}'.format(note, self))
@@ -161,6 +156,7 @@ class Note(Model):
     def delete(self):
         logger.info('Deleting note {} in notebook {}'.format(self, self.notebook))
         self.api.delete_note(self.to_json())
+        del(self.notebook.notes[self.id])
 
     def add_tags(self, tags):
         for tag in tags:
@@ -169,6 +165,8 @@ class Note(Model):
 
     def move_to(self, new_notebook):
         self.api.move_note(self.to_json(), new_notebook.id)
+        del(self.notebook.notes[self.id])
+        new_notebook.add_note(self)
 
 
 class Tag(Model):

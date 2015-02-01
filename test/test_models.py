@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+from json import dumps
 from paperworks import models
 from test_data import *
 
@@ -10,6 +12,16 @@ except ImportError:
 
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
+        self.patcher = patch('paperworks.wrapper.urlopen')
+        self.mocked_urlopen = self.patcher.start()
+        temp = tempfile.TemporaryFile()
+        temp.write(dumps(
+            {
+                'success': True,
+                'response': 'success'
+            }).encode('ASCII'))
+        temp.seek(0)
+        self.mocked_urlopen.return_value = temp
         self.pw = models.Paperwork(user, passwd, uri)
         self.api = self.pw.api
 
@@ -56,6 +68,16 @@ class TestPaperwork(unittest.TestCase):
 
 class TestModel(unittest.TestCase):
     def setUp(self):
+        self.patcher = patch('paperworks.wrapper.urlopen')
+        self.mocked_urlopen = self.patcher.start()
+        temp = tempfile.TemporaryFile()
+        temp.write(dumps(
+            {
+                'success': True,
+                'response': 'success'
+            }).encode('ASCII'))
+        temp.seek(0)
+        self.mocked_urlopen.return_value = temp
         self.api = models.Paperwork(user, passwd, host=uri).api
 
     def tearDown(self):
@@ -79,25 +101,25 @@ class TestNotebook(TestModel):
             self.api)
         self.note = models.Note.from_json(note, self.nb)
 
-    def test_from_json(self):
-        parsed_notebook = models.Notebook.from_json(notebook, self.api)
-        self.from_json_test(parsed_notebook, notebook_title, notebook_id)
-
     def test_to_json(self):
         self.to_json_test(
             models.Notebook(notebook_title, notebook_id, self.api).to_json(),
             notebook_title,
             notebook_id)
 
-    def test_add_note(self):
-        self.nb.add_note(self.note)
-        self.assertTrue(self.note in self.nb.notes.values())
-        self.assertEqual(self.note.notebook, self.nb)
+    def test_from_json(self):
+        parsed_notebook = models.Notebook.from_json(notebook, self.api)
+        self.from_json_test(parsed_notebook, notebook_title, notebook_id)
 
-    @patch('paperworks.wrapper.api.create_note')
-    def test_create_note(self, mocked_create_note):
-        self.nb.create_note(note_title)
-        mocked_create_note.assert_called_with(self.nb.id, note_title)
+    @patch('paperworks.wrapper.api.create_notebook')
+    def test_create(self, mocked_create_notebook):
+        models.Notebook.create(self.api, notebook_title)
+        mocked_create_notebook.assert_called_with(notebook_title)
+
+    @patch('paperworks.wrapper.api.delete_notebook')
+    def test_delete(self, mocked_delete):
+        self.nb.delete()
+        mocked_delete.assert_called_with(notebook_id)
 
     @patch('paperworks.wrapper.api.create_notebook')
     @patch('paperworks.wrapper.api.get_notebook')
@@ -110,10 +132,27 @@ class TestNotebook(TestModel):
         mocked_get.assert_called_with(self.nb.id)
         mocked_update.assert_called_with(self.nb.to_json())
 
-    @patch('paperworks.wrapper.api.delete_notebook')
-    def test_delete(self, mocked_delete):
-        self.nb.delete()
-        mocked_delete.assert_called_with(notebook_id)
+
+    def test_get_notes(self):
+        self.nb.add_note(self.note)
+        notes = self.nb.get_notes()
+        notes[0] = self.note
+
+    @patch('paperworks.wrapper.api.create_note')
+    def test_create_note(self, mocked_create_note):
+        self.nb.create_note(note_title)
+        mocked_create_note.assert_called_with(self.nb.id, note_title)
+
+    def test_add_note(self):
+        self.nb.add_note(self.note)
+        self.assertTrue(self.note in self.nb.notes.values())
+        self.assertEqual(self.note.notebook, self.nb)
+
+    @patch('paperworks.wrapper.api.list_notebook_notes')
+    def test_download(self, mocked_list_notebook_notes):
+        mocked_list_notebook_notes.return_value = []
+        self.nb.download([models.Tag.from_json(tag, self.api)])
+        self.assertTrue(mocked_list_notebook_notes.called)
 
 
 class TestNote(TestModel):
@@ -130,16 +169,22 @@ class TestNote(TestModel):
         self.notebook.add_note(self.parsed_note)
         self.parsed_note_json = self.parsed_note.to_json()
 
-    def test_from_json(self):
-        self.assertEqual(self.parsed_note.content, content)
-        self.from_json_test(self.parsed_note, note_title, note_id)
-
     def test_to_json(self):
         self.old_note.add_tags([models.Tag.from_json(tag, self.api)])
         self.notebook.add_note(self.old_note)
         json_note = self.old_note.to_json()
         self.assertEqual(json_note['content'], content)
         self.to_json_test(json_note, note_title, note_id)
+
+    def test_from_json(self):
+        self.assertEqual(self.parsed_note.content, content)
+        self.from_json_test(self.parsed_note, note_title, note_id)
+
+    @patch('paperworks.wrapper.api.create_note')
+    def test_create(self, mocked_create_note):
+        mocked_create_note.return_value = note
+        models.Note.create(note_title, self.notebook)
+        mocked_create_note.assert_called_with(notebook_id, note_title)
 
     @patch('paperworks.wrapper.api.move_note')
     def test_move_to(self, mocked_move):
@@ -148,9 +193,6 @@ class TestNote(TestModel):
                 notebook2, self.api))
         mocked_move.assert_called_with(self.parsed_note_json, notebook2_id)
 
-    # TODO (Nelo Wallus): Throws NoneType on
-    # self.notebook.id, but works
-    @unittest.expectedFailure
     @patch('paperworks.wrapper.api.delete_note')
     def test_delete(self, mocked_delete):
         self.parsed_note.delete()
