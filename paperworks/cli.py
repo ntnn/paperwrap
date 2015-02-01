@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from paperworks.models import Paperwork, Note
+from paperworks import models
 import os
 import sys
 import logging
@@ -32,7 +32,7 @@ def login():
         host = input('Host:')
         user = input('User:')
         passwd = getpass('Password:')
-    pw = Paperwork(user, passwd, host)
+    pw = models.Paperwork(user, passwd, host)
     if not pw.authenticated:
         print('User/password not valid or host not reachable.')
         sys.exit()
@@ -254,10 +254,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v", "--verbose", help="verbose output", action="store_true")
+    parser.add_argument(
+        "--threading", help="enable multi-threading", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
+    if args.threading:
+        models.use_threading = True
     login()
     download()
 

@@ -1,6 +1,7 @@
 from paperworks import wrapper
 from fuzzywuzzy import fuzz
 import logging
+from threading import Thread
 
 try:
     isinstance('string', basestring)
@@ -8,6 +9,17 @@ except NameError:
     basestring = str
 
 logger = logging.getLogger(__name__)
+
+use_threading = False
+
+
+def threaded_method(func):
+    def run(*args, **kwargs):
+        if use_threading:
+            Thread(target=func, args=args, kwargs=kwargs).start()
+        else:
+            func(*args, **kwargs)
+    return run
 
 
 class Model:
@@ -90,11 +102,13 @@ class Notebook(Model):
         logger.info('Created notebook {}'.format(title))
         return cls.from_json(api.create_notebook(title), api)
 
+    @threaded_method
     def delete(self):
         """Deletes notebook from remote host."""
         logger.info('Deleting notebook {}'.format(self))
         self.api.delete_notebook(self.id)
 
+    @threaded_method
     def update(self, force=True):
         """Updates local or remote notebook, depending on timestamp.
 
@@ -107,7 +121,8 @@ class Notebook(Model):
             logger.error('Remote notebook could not be found.'
                          'Wrong id or deleted.')
         elif force or remote['updated_at'] < self.updated_at:
-            self.updated_at = self.api.update_notebook(self.to_json())['updated_at']
+            self.updated_at = self.api.update_notebook(
+                self.to_json())['updated_at']
         else:
             logger.info('Remote version is higher.'
                         'Updating local notebook.')
@@ -120,6 +135,7 @@ class Notebook(Model):
         :rtype: list"""
         return sorted(self.notes.values(), key=lambda note: note.title)
 
+    @threaded_method
     def create_note(self, title):
         """Creates a note.
 
@@ -129,6 +145,7 @@ class Notebook(Model):
         self.notes[note.id] = note
         logger.info('Created note {} in {}'.format(note, self))
 
+    @threaded_method
     def add_note(self, note):
         """Adds a note to the notebook.
 
@@ -136,6 +153,7 @@ class Notebook(Model):
         self.notes[note.id] = note
         logger.info('Added note {} to {}'.format(note, self))
 
+    @threaded_method
     def download(self, tags):
         """Downloads notes.
 
@@ -207,6 +225,7 @@ class Note(Model):
             res['updated_at']
             )
 
+    @threaded_method
     def update(self, force=False):
         """Updates local or remote note, depending on timestamp.
 
@@ -229,6 +248,7 @@ class Note(Model):
             self.content = remote['content']
             self.updated_at = remote['updated_at']
 
+    @threaded_method
     def delete(self):
         """Deletes note from remote host and notebook."""
         logger.info('Deleting note {} in notebook {}'.format(
@@ -237,6 +257,7 @@ class Note(Model):
             del(self.notebook.notes[self.id])
         self.api.delete_note(self.to_json())
 
+    @threaded_method
     def add_tags(self, tags):
         """Adds a collection of tags to the note.
 
@@ -245,6 +266,7 @@ class Note(Model):
             logger.info('Adding tag {} to note {}'.format(tag, self))
             self.tags.add(tag)
 
+    @threaded_method
     def move_to(self, new_notebook):
         """Moves note to new_notebook.
 
@@ -322,6 +344,7 @@ class Paperwork:
             logger.info('Created notebook {}'.format(notebook))
             return notebook
 
+    @threaded_method
     def delete_notebook(self, nb):
         """Deletes notebook from server and instance.
 
@@ -330,6 +353,7 @@ class Paperwork:
         nb.delete()
         del(self.notebooks[nb.id])
 
+    @threaded_method
     def add_notebook(self, notebook):
         """Adds notebook to paperwork.
 
@@ -339,6 +363,7 @@ class Paperwork:
             self.notebooks[notebook.id] = notebook
             logger.info('Added notebook {}'.format(notebook))
 
+    @threaded_method
     def add_tag(self, tag):
         """Adds tag to paperwork.
 
@@ -365,6 +390,7 @@ class Paperwork:
             else:
                 logger.info('Skipping notebook {}'.format(notebook))
 
+    @threaded_method
     def update(self):
         """Updating notebooks and notes to host."""
         logger.info('Updating notebooks and notes')
