@@ -163,7 +163,8 @@ class Note(Model):
             self.updated_at = remote['updated_at']
 
     def delete(self):
-        logger.info('Deleting note {} in notebook {}'.format(self, self.notebook))
+        logger.info('Deleting note {} in notebook {}'.format(
+            self, self.notebook))
         self.api.delete_note(self.to_json())
         del(self.notebook.notes[self.id])
 
