@@ -276,11 +276,11 @@ class Paperwork:
 
     def fuzzy_find_tag(self, title):
         """Fuzzy search for tag with given title."""
-        return self.fuzzy_find(title, self.get_tags())
+        return self.fuzzy_find(title, self.tags.values())
 
     def fuzzy_find_notebook(self, title):
         """Fuzzy search for notebook with given title."""
-        return self.fuzzy_find(title, self.get_notebooks())
+        return self.fuzzy_find(title, self.notebooks.values())
 
     def fuzzy_find_note(self, title):
         """Fuzze search for note with given title."""
