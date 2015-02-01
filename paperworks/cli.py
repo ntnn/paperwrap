@@ -11,7 +11,7 @@ import tempfile
 if str(sys.version[0]) < '3':
     input = raw_input
 
-logger = logging.getLogger('paperworkcli')
+logger = logging.getLogger(__name__)
 
 pw = None
 

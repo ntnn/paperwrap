@@ -7,7 +7,7 @@ try:
 except NameError:
     basestring = str
 
-logger = logging.getLogger('models')
+logger = logging.getLogger(__name__)
 
 
 class Model:
