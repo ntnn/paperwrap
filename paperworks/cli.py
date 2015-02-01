@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 from paperworks.models import Paperwork, Note
 import os
 import sys
