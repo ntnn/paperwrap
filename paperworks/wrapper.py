@@ -150,7 +150,7 @@ class api:
     def delete_notes(self, notes):
         """Deletes note and returns meta info."""
         return self.delete('note', notes[0]['notebook_id'], ','.join(
-            [note['id'] for note in notes]))
+            [str(note['id']) for note in notes]))
 
     def move_note(self, note, new_notebook_id):
         """Moves note to new_notebook_id and returns meta info."""
