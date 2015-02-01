@@ -441,7 +441,9 @@ class Paperwork:
         logger.info('Searching note for key {} of type {}'.format(
             key, type(key)))
         if isinstance(key, basestring):
-            return self.find(key, self.get_notes())
+            for item in self.get_notes():
+                if key == item.title:
+                    return item
         else:
             logger.info('key is int, finding through keys')
             for nb in self.notebooks.values():
