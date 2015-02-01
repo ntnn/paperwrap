@@ -11,7 +11,7 @@ from base64 import b64encode
 
 logger = logging.getLogger('pwwrapper')
 
-__version__ = '0.13'
+__version__ = '0.14'
 api_version = '/api/v1/'
 default_agent = 'paperwork.py api wrapper v{}'.format(__version__)
 
