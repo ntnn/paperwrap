@@ -176,21 +176,22 @@ def tagged(tag_title):
 
 
 def print_help():
-    print('The commands are self-explanatory. Notes and'
-          'notebooks are chosen through a fuzzy search.'
-          ''
-          'update'
-          'ls'
-          'edit $note'
-          'delete $title - takes effect on notes and notebooks'
-          'move $note to $notebook'
-          'create $note in $notebook - keyword "in"'
-          'create $notebook'
-          'tags - print tags'
-          'tag $note with $tag - tag $note with $tag'
-          'tag $tag - create $tag'
-          'tagged $tag - print notes tagged with $tag'
-          'exit'
+    print("""The commands are self-explanatory. Notes, tags and notebooks are chosen through a fuzzy search.
+
+update                      Pushes local changes to the remote host
+ls                          List notebooks and notes
+edit $note                  edit note
+delete $notebook            delete notebook
+delete $note in $notebook   delete note in notebook
+move $note to $notebook     move note to notebook
+create $note in $notebook   create note in notebook
+create $notebook            create notebook
+tags                        list tags
+tag $note with $tag         tag note with tag
+tag $tag                    create $tag
+tagged $tag                 print notes tagged with $tag
+exit                        exit application
+"""
           )
 
 cmd_dict = {
