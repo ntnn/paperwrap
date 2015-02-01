@@ -263,7 +263,7 @@ class api:
         :rtype: list
         """
         return self.get('move', notes[0]['notebook_id'], ','.join(
-            [note['id'] for note in notes]), new_notebook_id)
+            [str(note['id']) for note in notes]), new_notebook_id)
 
     def list_note_versions(self, note):
         """Returns a list of versions of given note.
@@ -280,7 +280,7 @@ class api:
         :rtype: list
         """
         return self.get('versions', notes[0]['notebook_id'], ','.join(
-            [note['id'] for note in notes]))
+            [str(note['id']) for note in notes]))
 
     def get_note_version(self, note, version_id):
         """Returns version with version_id of note.

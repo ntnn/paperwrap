@@ -1,6 +1,6 @@
-notebook_id = '1'
-notebook2_id = '2'
-new_notebook_id = '2'
+notebook_id = 1
+notebook2_id = 2
+new_notebook_id = 2
 notebook_title = 'notebook title'
 notebook_type = '0'
 notebook = {
@@ -18,8 +18,8 @@ notebooks = [
     notebook2
     ]
 
-version_id = '10'
-version2_id = '11'
+version_id = 10
+version2_id = 11
 version = {
     'id': version_id
     }
@@ -31,8 +31,8 @@ versions = [
     version2
     ]
 
-attachment_id = '55'
-attachment2_id = '56'
+attachment_id = 55
+attachment2_id = 56
 attachment_file = 'attached.pdf'
 attachment = {
     'id': attachment_id,
@@ -47,8 +47,8 @@ attachments = [
     attachment2
     ]
 
-tag_id = '42'
-tag2_id = '43'
+tag_id = 42
+tag2_id = 43
 tag_title = 'some_tag'
 
 tag = {
@@ -68,8 +68,8 @@ tags = [
 
 note_title = 'note title'
 content = 'some content'
-note_id = '4'
-note2_id = '5'
+note_id = 4
+note2_id = 5
 note_updated_at = '2014-09-20 19:43:59'
 note2_updated_at = '2014-09-19 19:43:59'
 
@@ -115,11 +115,18 @@ uri_correct = 'http://{}'.format(uri)
 agent = 'dummy agent'
 
 move = [{
-        'notebook': notebook,
-        'id': note_id,
-        'notebook_id': notebook_id,
-        'version_id': version_id
-        }]
+    'notebook': notebook,
+    'id': note_id,
+    'notebook_id': notebook_id,
+    'version_id': version_id
+    }]
+
+move_single = {
+    'notebook': notebook,
+    'id': note_id,
+    'notebook_id': notebook_id,
+    'version_id': version_id
+    }
 
 tagged = [
     note

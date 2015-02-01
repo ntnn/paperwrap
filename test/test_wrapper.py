@@ -86,14 +86,18 @@ class TestRequests(unittest.TestCase):
     def test_update_note(self):
         self.request(self.api.update_note, 'note', note)
 
-    def test_delete_note(self):
-        self.request(self.api.delete_note, 'notes', note)
+    @patch('paperworks.wrapper.api.delete_notes')
+    def test_delete_note(self, mocked_delete_notes):
+        self.api.delete_note(note)
+        mocked_delete_notes.assert_called_with([note])
 
     def test_delete_notes(self):
         self.request(self.api.delete_notes, 'notes', notes)
 
-    def test_move_note(self):
-        self.request(self.api.move_note, 'move', note, new_notebook_id)
+    @patch('paperworks.wrapper.api.move_notes')
+    def test_move_note(self, mocked_move_notes):
+        self.api.move_note(note, new_notebook_id)
+        mocked_move_notes.assert_called_with([note], new_notebook_id)
 
     def test_move_notes(self):
         self.request(self.api.move_notes, 'move', notes, new_notebook_id)
