@@ -55,17 +55,17 @@ class Notebook(Model):
 
     @classmethod
     def create(cls, api, title):
-        logger.info('Created notebook {}', title)
+        logger.info('Created notebook {}'.format(title))
         return cls.from_json(api.create_notebook(title), api)
 
     def delete(self):
         """Deletes notebook from remote host."""
-        logger.info('Deleting notebook {}', self)
+        logger.info('Deleting notebook {}'.format(self))
         self.api.delete_notebook(self.id)
 
     def update(self, force=True):
         """Updates local or remote notebook, depending on time stamp."""
-        logger.info('Updating {}', self)
+        logger.info('Updating {}'.format(self))
         remote = self.api.get_notebook(self.id)
         if remote is None:
             logger.error('Remote notebook could not be found.'
@@ -84,20 +84,20 @@ class Notebook(Model):
     def create_note(self, title):
         note = Note.create(title, self)
         self.notes[note.id] = note
-        logger.info('Created note {} in notebook {}', note, self)
+        logger.info('Created note {} in notebook {}'.format(note, self))
 
     def delete_note(self, note):
         note.delete()
         self.notes.discard(note)
-        logger.info('Deleted note {} in {}', note, self)
+        logger.info('Deleted note {} in {}'.foramt(note, self))
 
     def add_note(self, note):
         self.notes[note.id] = note
-        logger.info('Added note {} to {}', note, self)
+        logger.info('Added note {} to {}'.format(note, self))
 
     def download(self, tags):
         notes_json = self.api.list_notebook_notes(self.id)
-        logger.info('Downloading notes of notebook {}', self)
+        logger.info('Downloading notes of notebook {}'.format(self))
         for note_json in notes_json:
             note = Note.from_json(note_json, self)
             self.add_note(note)
@@ -133,7 +133,7 @@ class Note(Model):
 
     @classmethod
     def create(cls, title, notebook):
-        logger.info('Creating note {} in notebook', title, notebook)
+        logger.info('Creating note {} in notebook'.format(title, notebook))
         return cls.from_json(
             notebook.api.create_note(notebook.id, title),
             notebook
@@ -142,7 +142,7 @@ class Note(Model):
     def update(self, force=False):
         """Updates local or remote note, depending on timestamp.
         Creates if note id is 0."""
-        logger.info('Updating note {}', self)
+        logger.info('Updating note {}'.format(self))
         remote = self.api.get_note(self.notebook.id, self.id)
         if remote is None:
             logger.error('Remote note could not be found. Wrong id,'
@@ -159,12 +159,12 @@ class Note(Model):
             self.updated_at = remote['updated_at']
 
     def delete(self):
-        logger.info('Deleting note {} in notebook {}', self, self.notebook)
+        logger.info('Deleting note {} in notebook {}'.format(self, self.notebook))
         self.api.delete_note(self.to_json())
 
     def add_tags(self, tags):
         for tag in tags:
-            logger.info('Adding tag {} to note {}', tag, self)
+            logger.info('Adding tag {} to note {}'.format(tag, self))
             self.tags.add(tag)
 
     def move_to(self, new_notebook):
@@ -199,7 +199,7 @@ class Tag(Model):
 
 
 class Paperwork:
-    def __init__(self, user, passwd, host='http://demo.paperwork.rocks/'):
+    def __init__(self, user, passwd, host):
         self.notebooks = {}
         self.tags = {}
         self.api = wrapper.api()
@@ -218,7 +218,7 @@ class Paperwork:
 
     def add_tag(self, tag):
         self.tags[tag.id] = tag
-        logger.info('Added tag {}', tag)
+        logger.info('Added tag {}'.format(tag))
 
     def download(self):
         """Downloading tags, notebooks and notes from host."""
