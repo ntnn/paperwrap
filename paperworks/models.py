@@ -14,6 +14,8 @@ use_threading = False
 
 
 def threaded_method(func):
+    """Decorator to put a function into background after calling,
+    if threading is enabled."""
     def run(*args, **kwargs):
         if use_threading:
             Thread(target=func, args=args, kwargs=kwargs).start()
