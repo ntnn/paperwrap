@@ -7,10 +7,10 @@ logger = logging.getLogger('models')
 
 
 class Model:
-    def __init__(self, title, id, paperwork=None):
+    def __init__(self, title, id, api):
         self.id = id
         self.title = title
-        self.pw = paperwork
+        self.api = api
 
     def __str__(self):
         return "{}:'{}'".format(self.id, self.title)
@@ -32,24 +32,27 @@ class Model:
 
 
 class Notebook(Model):
-    def __init__(self, title, id=0, paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork)
-        self.notes = set()
+    def __init__(self, title, id, api, type=0, updated_at=''):
+        super().__init__(title, id, api)
+        self.type = type
         self.updated_at = updated_at
+        self.notes = {}
 
     def to_json(self):
         return {
-            'type': 0,
+            'type': self.type,
             'id': self.id,
             'title': self.title
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, api):
         return cls(
             json['title'],
-            json['id']
-            )
+            json['id'],
+            api,
+            type=json['type'],
+            updated_at='')
 
     def add_note(self, note):
         """Adds note to notebook. Returns note instance."""
@@ -104,14 +107,12 @@ class Notebook(Model):
 
 
 class Note(Model):
-    def __init__(self, title, id=0, content='', tags=set(),
-                 paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork)
+    def __init__(self, title, id, notebook, content='', updated_at=''):
+        super().__init__(title, id, notebook.api)
+        self.notebook = notebook
         self.content = content
-        # TODO (Nelo Wallus): This is ugly.
-        self.tags = set()
-        self.add_tags(tags)
         self.updated_at = updated_at
+        self.tags = set()
 
     def to_json(self):
         return {
@@ -123,12 +124,13 @@ class Note(Model):
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, notebook):
         return cls(
             json['title'],
             json['id'],
+            notebook,
             json['content'],
-            updated_at=json['updated_at']
+            json['updated_at']
             )
 
     def add_tag(self, tag):
@@ -221,10 +223,10 @@ class Version(Model):
 
 
 class Tag(Model):
-    def __init__(self, title, id=0, visibility=0, notes=set(), paperwork=None):
-        super().__init__(title, id, paperwork)
+    def __init__(self, title, id, api, visibility=0):
+        super().__init__(title, id, api)
         self.visibility = visibility
-        self.notes = notes
+        self.notes = set()
 
     def to_json(self):
         return {
@@ -234,10 +236,11 @@ class Tag(Model):
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, api):
         return cls(
             json['title'],
             json['id'],
+            api,
             json['visibility']
             )
 
