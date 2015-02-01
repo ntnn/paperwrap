@@ -281,6 +281,8 @@ class Paperwork:
 
     def find_note(self, key):
         """Find note with key (id or title)."""
+        logger.info('Searching note for key {} of type {}'.format(
+            key, type(key)))
         for note in self.get_notes():
             if key in (note.id, note.title):
                 return note
