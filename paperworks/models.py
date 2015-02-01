@@ -153,7 +153,6 @@ class Notebook(Model):
         self.notes[note.id] = note
         logger.info('Added note {} to {}'.format(note, self))
 
-    @threaded_method
     def download(self, tags):
         """Downloads notes.
 
