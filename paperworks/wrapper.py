@@ -35,7 +35,7 @@ api_path = {
 
 
 def b64(string):
-    """Returns given string as base64 hash.
+    """Returns given string as base64 hash-string.
 
     :type string: str
     :rtype: str
