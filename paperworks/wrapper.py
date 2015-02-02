@@ -16,21 +16,22 @@ api_version = '/api/v1/'
 default_agent = 'paperwork.py api wrapper v{}'.format(__version__)
 
 api_path = {
-    'notebooks':   'notebooks',
-    'notebook':    'notebooks/{}',
-    'notes':       'notebooks/{}/notes',
-    'note':        'notebooks/{}/notes/{}',
-    'move':        'notebooks/{}/notes/{}/move/{}',
-    'versions':    'notebooks/{}/notes/{}/versions',
-    'version':     'notebooks/{}/notes/{}/versions/{}',
-    'attachments': 'notebooks/{}/notes/{}/versions/{}/attachments',
-    'attachment':  'notebooks/{}/notes/{}/versions/{}/attachments/{}',
-    'tags':        'tags',
-    'tag':         'tags/{}',
-    'tagged':      'tagged/{}',
-    'search':      'search/{}',
-    'i18n':        'i18n',
-    'i18nkey':     'i18n/{}'
+    'notebooks':      'notebooks',
+    'notebook':       'notebooks/{}',
+    'notes':          'notebooks/{}/notes',
+    'note':           'notebooks/{}/notes/{}',
+    'move':           'notebooks/{}/notes/{}/move/{}',
+    'versions':       'notebooks/{}/notes/{}/versions',
+    'version':        'notebooks/{}/notes/{}/versions/{}',
+    'attachments':    'notebooks/{}/notes/{}/versions/{}/attachments',
+    'attachment':     'notebooks/{}/notes/{}/versions/{}/attachments/{}',
+    'attachment_raw': 'notebooks/{}/notes/{}/versions/{}/attachments/{}/raw',
+    'tags':           'tags',
+    'tag':            'tags/{}',
+    'tagged':         'tagged/{}',
+    'search':         'search/{}',
+    'i18n':           'i18n',
+    'i18nkey':        'i18n/{}'
     }
 
 
@@ -90,8 +91,10 @@ class api:
             request = Request(uri, data, self.headers)
             request.get_method = lambda: method
             logger.info('{} request to {} with {}'.format(method, uri, data))
-            res = urlopen(request)
-            json_res = json.loads(res.read().decode('ASCII'))
+            res = urlopen(request).read()
+            if keyword == 'attachment_raw':
+                return res
+            json_res = json.loads(res.decode('ASCII'))
             if json_res['success'] is False:
                 logger.error('Unsuccessful request.')
             else:
@@ -297,16 +300,35 @@ class api:
         :type note: models.Note
         :rtype: list
         """
+        return self.list_note_version_attachments(note, 0)
+
+    def list_note_version_attachments(self, note, version_id):
+        """List attachments of a note belonging to a specific version.
+
+        :type note: models.Note
+        :type version_id: int
+        :rtype: list
+        """
         return self.get(
             'attachments',
             note['notebook_id'],
             note['id'],
-            note['versions'][0]['id'])
+            version_id)
 
     def get_note_attachment(self, note, attachment_id):
-        """Returns attachment with attachment_id of note.
+        """Returns info about attachment with attachment_id of note.
 
         :type note: models.Note
+        :type attachment_id: int
+        :rtype: dict
+        """
+        return self.get_note_version_attachment(note, 0, attachment_id)
+
+    def get_note_version_attachment(self, note, version_id, attachment_id):
+        """Returns info about attachment with attachment_id of note version.
+
+        :type note: models.Note
+        :type version_id: int
         :type attachment_id: int
         :rtype: dict
         """
@@ -314,8 +336,52 @@ class api:
             'attachment',
             note['notebook_id'],
             note['id'],
-            note['versions'][0]['id'],
+            version_id,
             attachment_id)
+
+    def download_note_attachment(self, note, attachment_id, path):
+        """Downloads attachment to specified path.
+
+        Returns true in case of success, false otherwise.
+        :type note: models.Note
+        :type attachment_id: int
+        :type path: str
+        :rtype: bool
+        """
+        return self.download_note_version_attachment(
+            note,
+            0,
+            attachment_id,
+            path)
+
+    def download_note_version_attachment(
+            self,
+            note,
+            version_id,
+            attachment_id,
+            path):
+        """Downloads attachment of note version to specified path.
+
+        Returns true in case of success, false otherwise.
+        :type note: models.Note
+        :type version_id: int
+        :type attachment_id: int
+        :type path: str
+        :rtype: bool
+        """
+        attachment = self.get(
+            'attachment_raw',
+            note['notebook_id'],
+            note['id'],
+            version_id,
+            attachment_id)
+        try:
+            with open(path, 'wb') as f:
+                f.write(attachment)
+            return True
+        except Exception as e:
+            logger.error(e)
+        return False
 
     def delete_note_attachment(self, note, attachment_id):
         """Deletes attachment with attachment_id on note.
@@ -324,14 +390,30 @@ class api:
         :type attachment_id: int
         :rtype: dict
         """
+        return self.delete_note_version_attachment(note, 0, attachment_id)
+
+    def delete_note_version_attachment(self, note, version_id, attachment_id):
+        """Deletes attachment with attachment_id on note.
+
+        :type note: models.Note
+        :type version_id: int
+        :type attachment_id: int
+        :rtype: dict
+        """
         return self.delete(
             'attachment',
             note['notebook_id'],
             note['id'],
-            note['versions'][0]['id'],
+            version_id,
             attachment_id)
 
-    def upload_attachment(self, note, attachment):
+    def upload_attachment(self, note, path):
+        """Uploads an attachement.
+
+        :type note: models.Note
+        :type path: str
+        :rtype: bool
+        """
         pass
 
     def list_tags(self):
