@@ -183,6 +183,8 @@ class Note(Model):
         self.content = content
         self.updated_at = updated_at
         self.tags = set()
+        self.versions = []
+        self.attachments = []
 
     def to_json(self):
         """Returns note as dict."""
@@ -276,6 +278,122 @@ class Note(Model):
         self.api.move_note(self.to_json(), new_notebook.id)
         del(self.notebook.notes[self.id])
         new_notebook.add_note(self)
+
+    def download_versions(self):
+        """Lists versions of a note.
+
+        Also sets note.versions list in case of future reference.
+        :rtype: list
+        """
+        self.versions = [Version.from_json(version)
+                         for version in self.api.list_note_versions(self)]
+        return self.versions
+
+    def list_attachments(self):
+        """Lists attachments of a note.
+
+        Also sets note.attachments list in case of future reference.
+        :rtype: list
+        """
+        self.attachments = [
+            Attachment.from_json(attachment)
+            for attachment in self.api.list_note_attachments(self)]
+        return self.attachments
+
+
+class Version:
+    def __init__(self, note, title, id, previous_id, next_id,
+                 content, updated_at):
+        """Class representing a version of a note.
+
+        :type title: str
+        :param int or str id: ID of the version - not the note
+        :type previous_id: int or str
+        :type next_id: int or str
+        :type content: str
+        :param str updated_at: Timestamp of the last update.
+            Same as the creation date of the next version.
+        """
+        self.note = note
+        self.title = title
+        self.id = int(id)
+        self.previous_id = int(previous_id)
+        self.next_id = int(next_id)
+        self.content = content
+        self.updated_at = updated_at
+        self.attachments = []
+
+    @classmethod
+    def from_json(cls, note, json):
+        """Parses version of a note from dict.
+
+        :type note: models.Note
+        :type json: dict
+        """
+        return cls(
+            note,
+            json['title'],
+            json['id'],
+            json['previous_id'],
+            json['next_id'],
+            json['content'],
+            json['updated_at']
+            )
+
+    def list_attachments(self):
+        """Lists attachments of a note version.
+
+        Also sets version.attachments list in case of future reference.
+        :rtype: list
+        """
+        self.attachments = [
+            Attachment.from_json(attachment)
+            for attachment in
+            self.note.api.list_note_version_attachments(self.note, self.id)]
+        return self.attachments
+
+
+class Attachment:
+    def __init__(self, note, filename, id, mimetype, size, updated_at):
+        """Class representing an attachment of a note.
+
+        :type note: models.Note
+        :type filename: str
+        :type id: int or str
+        :type mimetype: str
+        :param str size: size in bits
+        :type updated_at: str
+        """
+        self.note = note
+        self.filename = filename
+        self.id = int(id)
+        self.mimetype = mimetype
+        self.size = size
+        self.updated_at = updated_at
+
+    @classmethod
+    def from_json(cls, note, json):
+        """Parses attachment from dict.
+
+        :type json: dict
+        :type note: models.Note
+        """
+        return cls(
+            note,
+            json['filename'],
+            json['id'],
+            json['mimetype'],
+            json['size'],
+            json['updated_at']
+            )
+
+    @threaded_method
+    def download_attachment(self, path):
+        """Downloads attachment to specified path.
+
+        :type path: str
+        """
+        self.note.api.download_note_attachment(self.note, self.id, path)
 
 
 class Tag(Model):
