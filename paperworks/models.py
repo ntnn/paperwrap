@@ -296,7 +296,7 @@ class Note(Model):
         :rtype: list
         """
         self.attachments = [
-            Attachment.from_json(attachment)
+            Attachment.from_json(attachment, 0)
             for attachment in self.api.list_note_attachments(self)]
         return self.attachments
 
@@ -347,19 +347,21 @@ class Version:
         :rtype: list
         """
         self.attachments = [
-            Attachment.from_json(attachment)
+            Attachment.from_json(attachment, self.id)
             for attachment in
             self.note.api.list_note_version_attachments(self.note, self.id)]
         return self.attachments
 
 
 class Attachment:
-    def __init__(self, note, filename, id, mimetype, size, updated_at):
+    def __init__(self, note, filename, id, version_id, mimetype, size,
+                 updated_at):
         """Class representing an attachment of a note.
 
         :type note: models.Note
         :type filename: str
         :type id: int or str
+        :type version_id: int or str
         :type mimetype: str
         :param str size: size in bits
         :type updated_at: str
@@ -367,6 +369,7 @@ class Attachment:
         self.note = note
         self.filename = filename
         self.id = int(id)
+        self.version_id = int(version_id)
         self.mimetype = mimetype
         self.size = size
         self.updated_at = updated_at
@@ -394,6 +397,17 @@ class Attachment:
         :type path: str
         """
         self.note.api.download_note_attachment(self.note, self.id, path)
+
+    @threaded_method
+    def delete(self):
+        """Deletes attachment on remote server."""
+        self.note.api.delete_note_version_attachment(
+            self.note,
+            self.version_id,
+            self.id
+            )
+        if self in self.note.attachments:
+            self.note.attachments.remove(self)
 
 
 class Tag(Model):
