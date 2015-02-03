@@ -279,7 +279,7 @@ class Note(Model):
         del(self.notebook.notes[self.id])
         new_notebook.add_note(self)
 
-    def download_versions(self):
+    def list_versions(self):
         """Lists versions of a note.
 
         Also sets note.versions list in case of future reference.
@@ -388,7 +388,7 @@ class Attachment:
             )
 
     @threaded_method
-    def download_attachment(self, path):
+    def download_to(self, path):
         """Downloads attachment to specified path.
 
         :type path: str
