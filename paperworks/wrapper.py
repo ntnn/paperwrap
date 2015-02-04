@@ -3,10 +3,7 @@
 
 import logging
 import json
-try:
-    from urllib.request import Request, urlopen
-except ImportError:
-    from urllib2 import Request, urlopen
+import requests
 from base64 import b64encode
 
 logger = logging.getLogger(__name__)
@@ -63,40 +60,45 @@ class api:
         """
         self.host = host if 'http://' in host else 'http://' + host
         self.headers = {
-            'Application-Type': 'application/json',
-            'Content-Type': 'application/json',
             'Authorization': 'Basic ' + b64('{}:{}'.format(user, passwd)),
-            'Connection': 'keep-alive',
             'User-Agent': self.user_agent
             }
-        if self.request(None, 'GET', 'notebooks'):
+        if self.get('notebooks'):
             return True
         else:
             return False
 
-    def request(self, data, method, keyword, *args):
+    def request(self, method, keyword, *args, **kwargs):
         """Sends a request to the host and returns the parsed json data
         if successfull.
 
-        :type data: dict
-        :type method: str
+        :type method: func
         :type keyword: str
-        :type args: str
+        :type files: dict
+        :type args: int
         :rtype: dict or None
         """
         try:
-            if data:
-                data = json.dumps(data).encode('ASCII')
             uri = self.host + api_version + api_path[keyword].format(*args)
-            request = Request(uri, data, self.headers)
-            request.get_method = lambda: method
-            logger.info('{} request to {} with {}'.format(method, uri, data))
-            res = urlopen(request).read()
+            data, files = None, None
+            if 'files' in kwargs:
+                self.headers['Content-Type'] = 'multipart/form-data'
+                files = kwargs
+            elif kwargs:
+                self.headers['Content-Type'] = 'application/json'
+                data = json.dumps(kwargs)
+            logger.info(
+                '{} request to {}:\ndata: {}\nfiles: {}\nheaders:{}'.format(
+                    method, uri, data, files, self.headers))
+            request = method(uri, data=data, files=files, headers=self.headers)
+            res = request.text
+            logger.info(res)
             if keyword == 'attachment_raw':
                 return res
-            json_res = json.loads(res.decode('ASCII'))
+            json_res = json.loads(res)
             if json_res['success'] is False:
-                logger.error('Unsuccessful request.')
+                logger.error('Unsuccessful request: {}'.format(
+                    json_res['errors']))
             else:
                 return json_res['response']
         except Exception as e:
@@ -109,7 +111,7 @@ class api:
         :type *args: str
         :rtype: dict or list or None
         """
-        return self.request(None, 'GET', keyword, *args)
+        return self.request(requests.get, keyword, *args)
 
     def post(self, data, keyword, *args):
         """Convenience wrapper for POST request.
@@ -119,7 +121,7 @@ class api:
         :type *args: str
         :rtype: dict or list or None
         """
-        return self.request(data, 'POST', keyword, *args)
+        return self.request(requests.post, keyword, *args, **data)
 
     def put(self, data, keyword, *args):
         """Convenience wrapper for PUT request.
@@ -129,7 +131,7 @@ class api:
         :type *args: str
         :rtype: dict or None
         """
-        return self.request(data, 'PUT', keyword, *args)
+        return self.request(requests.put, keyword, *args, **data)
 
     def delete(self, keyword, *args):
         """Convenience wrapper for DELETE request.
@@ -138,7 +140,7 @@ class api:
         :type *args: str
         :rtype: dict or None
         """
-        return self.request(None, 'DELETE', keyword, *args)
+        return self.request(requests.delete, keyword, *args)
 
     def list_notebooks(self):
         """Return all notebooks in a list.
