@@ -81,7 +81,7 @@ class api:
         """Sends a request to the host and returns the parsed json data
         if successfull.
 
-        :type method: func
+        :type method: str
         :type keyword: str
         :rtype: dict or None
         """
@@ -93,8 +93,11 @@ class api:
             logger.info(
                 '{} request to {}:\ndata: {}\nheaders: {}'.format(
                     method, uri, data, self.headers))
-            request = method(uri, data=data, headers=self.headers)
-            res = request.text
+            res = requests.request(
+                method,
+                uri,
+                data=data,
+                headers=self.headers).text
             if keyword == 'attachment_raw':
                 return res
             json_res = json.loads(res)
@@ -112,7 +115,7 @@ class api:
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.get, keyword, *ids)
+        return self.request('get', keyword, *ids)
 
     def post(self, data, keyword, *ids):
         """Convenience wrapper for POST request.
@@ -121,7 +124,7 @@ class api:
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.post, keyword, *ids, **data)
+        return self.request('post', keyword, *ids, **data)
 
     def put(self, data, keyword, *ids):
         """Convenience wrapper for PUT request.
@@ -130,7 +133,7 @@ class api:
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.put, keyword, *ids, **data)
+        return self.request('put', keyword, *ids, **data)
 
     def delete(self, keyword, *ids):
         """Convenience wrapper for DELETE request.
@@ -138,7 +141,7 @@ class api:
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.delete, keyword, *ids)
+        return self.request('delete', keyword, *ids)
 
     def list_notebooks(self):
         """Return all notebooks in a list.

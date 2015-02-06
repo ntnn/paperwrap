@@ -162,3 +162,8 @@ ret = {
     'i18n':        i18n,
     'i18nkey':     i18n
     }
+
+
+class ResponseObj:
+    def __init__(self, text):
+        self.text = text

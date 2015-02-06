@@ -12,16 +12,13 @@ except ImportError:
 
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.urlopen')
-        self.mocked_urlopen = self.patcher.start()
-        temp = tempfile.TemporaryFile()
-        temp.write(dumps(
-            {
-                'success': True,
-                'response': 'success'
-            }).encode('ASCII'))
-        temp.seek(0)
-        self.mocked_urlopen.return_value = temp
+        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.mocked_request = self.patcher.start()
+        temp = ResponseObj(dumps({
+            'success': True,
+            'response': 'success'
+            }))
+        self.mocked_request.return_value = temp
         self.pw = models.Paperwork(user, passwd, uri)
         self.api = self.pw.api
 
@@ -68,16 +65,13 @@ class TestPaperwork(unittest.TestCase):
 
 class TestModel(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.urlopen')
-        self.mocked_urlopen = self.patcher.start()
-        temp = tempfile.TemporaryFile()
-        temp.write(dumps(
-            {
-                'success': True,
-                'response': 'success'
-            }).encode('ASCII'))
-        temp.seek(0)
-        self.mocked_urlopen.return_value = temp
+        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.mocked_request = self.patcher.start()
+        temp = ResponseObj(dumps({
+            'success': True,
+            'response': 'success'
+            }))
+        self.mocked_request.return_value = temp
         self.api = models.Paperwork(user, passwd, host=uri).api
 
     def tearDown(self):

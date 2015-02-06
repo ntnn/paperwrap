@@ -14,16 +14,14 @@ except ImportError:
 
 class TestRequests(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.urlopen')
-        self.mocked_urlopen = self.patcher.start()
-        temp = tempfile.TemporaryFile()
-        temp.write(dumps(
-            {
-                'success': True,
-                'response': 'success'
-            }).encode('ASCII'))
-        temp.seek(0)
-        self.mocked_urlopen.return_value = temp
+        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.mocked_request = self.patcher.start()
+        temp = ResponseObj(dumps({
+            'success': True,
+            'response': 'success'
+            }))
+        self.mocked_request.return_value = temp
+        self.mocked_request.return_value = temp
         self.api = wrapper.api(agent)
         self.api.basic_authentication(uri, user, passwd)
 
@@ -39,20 +37,15 @@ class TestRequests(unittest.TestCase):
         self.assertEqual(self.api.headers['Authorization'], 'Basic ' + upasswd)
 
     def request(self, function, keyword, *args):
-        temp = tempfile.TemporaryFile()
-        temp.write(dumps(
-            {
-                'success': True,
-                'response': ret[keyword]
-            }).encode('ASCII'))
-        temp.seek(0)
-        self.mocked_urlopen.return_value = temp
+        temp = ResponseObj(dumps({
+            'success': True,
+            'response': ret[keyword]
+            }))
+        self.mocked_request.return_value = temp
 
         response = function(*args)
 
-        temp.close()
-
-        self.mocked_urlopen.assert_called()
+        self.mocked_request.assert_called()
         self.assertEqual(response, ret[keyword])
 
     def test_list_notebooks(self):
