@@ -417,13 +417,21 @@ class api:
             attachment_id)
 
     def upload_attachment(self, note, path):
-        """Uploads an attachement.
+        """Uploads an attachment.
 
         :type note: models.Note
         :type path: str
         :rtype: bool
         """
-        pass
+        return requests.post(
+            self.host + api_version + api_path['attachments'].format(
+                note.notebook.id,
+                note.id,
+                0
+                ),
+            files={'file': open(path, 'rb')},
+            headers=self.headers
+            )
 
     def list_tags(self):
         """Returns all tags.

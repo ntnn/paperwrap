@@ -301,6 +301,13 @@ class Note(Model):
             for attachment in self.api.list_note_attachments(self)]
         return self.attachments
 
+    def upload_file(self, path):
+        """Uploads file at path as attachment.
+
+        :type path: str
+        """
+        self.api.upload_attachment(self, path)
+
 
 class Version:
     def __init__(self, note, title, id, previous_id, next_id,
