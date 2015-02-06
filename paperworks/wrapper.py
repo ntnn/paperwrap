@@ -58,16 +58,32 @@ class api:
 
     def request(self, data, method, keyword, *args):
         """Sends a request to the host and returns the parsed json data
-        if successfull."""
+        if successfull.
+
+        :type method: func
+        :type keyword: str
+        :rtype: dict or None
+        """
         try:
             if data:
                 data = json.dumps(data).encode('ASCII')
             uri = self.host + api_version + api_path[keyword].format(*args)
-            request = Request(uri, data, self.headers)
-            request.get_method = lambda: method
-            logger.info('{} request to {} with {}'.format(method, uri, data))
-            res = urlopen(request)
-            json_res = json.loads(res.read().decode('ASCII'))
+            data, files = None, None
+            if 'file' in kwargs:
+                self.headers['Content-Type'] = 'multipart/form-data'
+                files = kwargs
+            elif kwargs:
+                self.headers['Content-Type'] = 'application/json'
+                data = json.dumps(kwargs)
+            logger.info(
+                '{} request to {}:\ndata: {}\nfiles: {}\nheaders:{}'.format(
+                    method, uri, data, files, self.headers))
+            request = method(uri, data=data, files=files, headers=self.headers)
+            res = request.text
+            logger.info(res)
+            if keyword == 'attachment_raw':
+                return res
+            json_res = json.loads(res)
             if json_res['success'] is False:
                 logger.error('Unsuccessful request.')
             else:
@@ -76,20 +92,38 @@ class api:
             logger.error(e)
 
     def get(self, keyword, *args):
-        """Convenience wrapper for GET request."""
-        return self.request(None, 'GET', keyword, *args)
+        """Convenience wrapper for GET request.
+
+        :type keyword: str
+        :rtype: dict or list or None
+        """
+        return self.request(requests.get, keyword, *args)
 
     def post(self, data, keyword, *args):
-        """Convenience wrapper for POST request."""
-        return self.request(data, 'POST', keyword, *args)
+        """Convenience wrapper for POST request.
+
+        :type data: dict
+        :type keyword: str
+        :rtype: dict or list or None
+        """
+        return self.request(requests.post, keyword, *args, **data)
 
     def put(self, data, keyword, *args):
-        """Convenience wrapper for PUT request."""
-        return self.request(data, 'PUT', keyword, *args)
+        """Convenience wrapper for PUT request.
+
+        :type data: dict
+        :type keyword: str
+        :rtype: dict or list or None
+        """
+        return self.request(requests.put, keyword, *args, **data)
 
     def delete(self, keyword, *args):
-        """Convenience wrapper for DELETE request."""
-        return self.request(None, 'DELETE', keyword, *args)
+        """Convenience wrapper for DELETE request.
+
+        :type keyword: str
+        :rtype: dict or list or None
+        """
+        return self.request(requests.delete, keyword, *args)
 
     def list_notebooks(self):
         """Return all notebooks in a list."""
