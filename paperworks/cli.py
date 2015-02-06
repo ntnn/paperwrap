@@ -54,6 +54,8 @@ def print_all():
         print(nb.title)
         for note in nb.get_notes():
             print("- {}".format(note.title))
+            for attachment in note.attachments:
+                print("-- {}".format(attachment.filename))
 
 
 def choose_note(title):
@@ -217,6 +219,15 @@ def tagged(tag_title):
         print(note.title)
 
 
+def upload(args):
+    f, note = split(args, ' to ')
+    try:
+        note = choose_note(note)
+        note.upload_file(f)
+    except Exception as e:
+        logger.error(e)
+
+
 def print_help():
     print("""The commands are self-explanatory. Notes, tags and notebooks are chosen through a fuzzy search.
 
@@ -246,7 +257,8 @@ cmd_dict = {
     'tags': tags,
     'tag': tag,
     'tagged': tagged,
-    'help': print_help
+    'help': print_help,
+    'upload': upload
     }
 
 

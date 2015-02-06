@@ -167,6 +167,7 @@ class Notebook(Model):
             note = Note.from_json(note_json, self)
             self.add_note(note)
             note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
+            note.list_attachments()
 
 
 class Note(Model):
@@ -297,8 +298,8 @@ class Note(Model):
         :rtype: list
         """
         self.attachments = [
-            Attachment.from_json(attachment, 0)
-            for attachment in self.api.list_note_attachments(self)]
+            Attachment.from_json(self, attachment)
+            for attachment in self.api.list_note_attachments(self.to_json())]
         return self.attachments
 
     def upload_file(self, path):
@@ -362,7 +363,7 @@ class Version:
 
 
 class Attachment:
-    def __init__(self, note, filename, id, version_id, mimetype, size,
+    def __init__(self, note, filename, id, mimetype,
                  updated_at):
         """Class representing an attachment of a note.
 
@@ -371,15 +372,12 @@ class Attachment:
         :type id: int or str
         :type version_id: int or str
         :type mimetype: str
-        :param str size: size in bits
         :type updated_at: str
         """
         self.note = note
         self.filename = filename
         self.id = int(id)
-        self.version_id = int(version_id)
         self.mimetype = mimetype
-        self.size = size
         self.updated_at = updated_at
 
     @classmethod
@@ -394,7 +392,6 @@ class Attachment:
             json['filename'],
             json['id'],
             json['mimetype'],
-            json['size'],
             json['updated_at']
             )
 
