@@ -41,6 +41,15 @@ def b64(string):
     return b64encode(string.encode('UTF-8')).decode('ASCII')
 
 
+def concatenate_ids(coll):
+    """Concatenates a collection of dicts ID's.
+
+    :type coll: list or tuple or dict
+    :rtype: string
+    """
+    return ','.join([str(item['id']) for item in coll])
+
+
 class api:
     def __init__(self, user_agent=default_agent):
         """Api instance.
@@ -217,8 +226,10 @@ class api:
         :type note_ids: list or set or tuple
         :rtype: list
         """
-        return self.get('note', notebook_id, ','.join(
-            [str(note_id) for note_id in note_ids]))
+        return self.get(
+            'note',
+            notebook_id,
+            ','.join([str(note_id) for note_id in note_ids]))
 
     def update_note(self, note):
         """Update note.
@@ -242,8 +253,10 @@ class api:
         :type note: list
         :rtype: list
         """
-        return self.delete('note', notes[0]['notebook_id'], ','.join(
-            [str(note['id']) for note in notes]))
+        return self.delete(
+            'note',
+            notes[0]['notebook_id'],
+            concatenate_ids(notes))
 
     def move_note(self, note, new_notebook_id):
         """Moves note to new_notebook_id.
@@ -261,8 +274,11 @@ class api:
         :type new_notebook_id: int
         :rtype: list
         """
-        return self.get('move', notes[0]['notebook_id'], ','.join(
-            [str(note['id']) for note in notes]), new_notebook_id)
+        return self.get(
+            'move',
+            notes[0]['notebook_id'],
+            concatenate_ids(notes),
+            new_notebook_id)
 
     def list_note_versions(self, note):
         """Returns a list of versions of given note.
@@ -278,8 +294,10 @@ class api:
         :type notes: list
         :rtype: list
         """
-        return self.get('versions', notes[0]['notebook_id'], ','.join(
-            [str(note['id']) for note in notes]))
+        return self.get(
+            'versions',
+            notes[0]['notebook_id'],
+            concatenate_ids(notes))
 
     def get_note_version(self, note, version_id):
         """Returns version with version_id of note.
