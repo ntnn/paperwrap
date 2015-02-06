@@ -56,7 +56,11 @@ if __name__ == "__main__":
             'console_scripts': ['paperworks = paperworks.cli:main']
             },
 
-        install_requires=['PyYAML', 'fuzzywuzzy', 'python-Levenshtein'],
+        install_requires=[
+            'PyYAML',
+            'fuzzywuzzy',
+            'python-Levenshtein',
+            'requests'],
 
         keywords='paperwork rocks twostairs api wrapper',
 
