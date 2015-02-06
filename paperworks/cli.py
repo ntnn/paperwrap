@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 from paperworks import models
-from getpass import getpass
 import os
 import sys
 import logging
 import yaml
 import argparse
+import tempfile
 
-if sys.version[0] < 3:
+if str(sys.version[0]) < '3':
     input = raw_input
 
-logger = logging.getLogger('paperwork')
+logger = logging.getLogger(__name__)
 
 pw = None
 
@@ -28,10 +28,14 @@ def login():
         user = conf['user']
         passwd = conf['pass']
     else:
+        from getpass import getpass
         host = input('Host:')
         user = input('User:')
         passwd = getpass('Password:')
     pw = models.Paperwork(user, passwd, host)
+    if not pw.authenticated:
+        print('User/password not valid or host not reachable.')
+        sys.exit()
 
 
 def download():
@@ -45,41 +49,50 @@ def update():
 
 
 def print_all():
+    """Prints notebook and notes in alphabetical order."""
     for nb in pw.get_notebooks():
         print(nb.title)
         for note in nb.get_notes():
             print("- {}".format(note.title))
 
 
-def print_notes():
-    for note in pw.get_notes():
-        print(note.title)
-
-
 def choose_note(title):
+    """Finds note in paperwork.
+
+    :type title: str
+    :rtype: models.Note
+    """
     return pw.fuzzy_find_note(title)
 
 
 def choose_notebook(title):
+    """Finds notebook in paperwork.
+
+    :type title: str
+    :rtype: models.Notebook
+    """
     return pw.fuzzy_find_notebook(title)
 
 
-def choose_note_and_notebook(title):
-    return pw.fuzzy_find(title, pw.get_notes() + pw.get_notebooks())
-
-
 def choose_tag(title):
+    """Finds tag in paperwork.
+
+    :type title: str
+    :rtype: models.Tag
+    """
     return pw.fuzzy_find_tag(title)
 
 
 def prompt(text, important=False):
     """Prompts user for confirmation.
-    If important is true, pressing 'Enter' means no."""
+
+    :type text: str
+    :param bool important: If true the default answer is false.
+    :rtype: bool
+    """
     answers = ('y', 'Y', 'yes', 'Yes', 'YES')
-    if important:
-        text = text + ' y/N'
-    else:
-        text = text + ' Y/n'
+    text += ' y/N' if important else ' Y/n'
+    if not important:
         answers += ('',)
     answer = input(text + ' ')
     if answer in answers:
@@ -87,60 +100,87 @@ def prompt(text, important=False):
     return False
 
 
-# TODO (Nelo Wallus): Use tempfile instead of physical.
 def edit(title):
-    """Edit note with title."""
+    """Edit note with title.
+
+    :type title: str
+    """
     note = choose_note(title)
     logger.info('Getting $EDITOR')
     editor = os.environ.get('EDITOR')
 
-    tempfile = '/tmp/paperwork-{}'.format(note.title)
+    tmpfile = tempfile.NamedTemporaryFile()
 
     logger.info('Writing content to temporary file')
-    with open(tempfile, 'w') as f:
+    with open(tmpfile, 'w') as f:
         f.write(note.content)
 
     logger.info('Launching system editor')
-    os.system("{} '{}'".format(editor, tempfile))
+    os.system("{} '{}'".format(editor, tmpfile.name))
 
     logger.info('Reading contents of temporary file')
-    with open(tempfile, 'r') as f:
+    with open(tmpfile, 'r') as f:
         note.content = f.read()
 
     logger.info('Removing temporary file')
-    os.remove(tempfile)
+    tmpfile.close()
 
 
-def delete(title):
-    """Delete note or notebook with title."""
-    elem = choose_note_and_notebook(title)
-    elem_type = 'note' if isinstance(elem, models.Note) else 'notebook'
-    if prompt('Delete {} {}?'.format(elem_type, elem.title), True):
-        logging.info('Deleting elem {}'.format(elem))
-        elem.delete()
+def split(args, splitter):
+    """Splits string with splitter and returns the resulting strings.
+
+    :type args: str
+    :type splitter: str
+    :rtype: str and str
+    """
+    if splitter in args:
+        return args.split(splitter)
+    else:
+        return args, None
+
+
+def delete(args):
+    """Delete note or notebook, depending on input.
+
+    :type args: str
+    """
+    note, notebook = split(args, ' in ')
+    if notebook:
+        note = choose_note(note)
+        notebook = choose_notebook(notebook)
+        if prompt('Delete note {} in {}?'.format(note.title, notebook.title)):
+            note.delete()
+    else:
+        notebook = choose_notebook(note)
+        if prompt('Delete notebook {}?'.format(notebook.title)):
+            pw.delete_notebook(notebook)
 
 
 def move(args):
-    """Move a note to another notebook."""
-    args = args.split('to')
-    note = choose_note(args[0])
-    notebook = choose_notebook(args[1])
+    """Move a note to another notebook.
+
+    :type args: str
+    """
+    note, notebook = split(args, ' to ')
+    note = choose_note(note)
+    notebook = choose_notebook(notebook)
     if prompt('Move note {} to {}?'.format(note.title, notebook.title)):
         note.move_to(notebook)
 
 
 def create(args):
-    """Creates note or notebook, depending on input."""
-    if ' in ' in args:
-        args = args.split(' in ')
-        note_title = args[0]
-        notebook = choose_notebook(args[1])
-        if prompt('Create note {} in {}?'.format(note_title, notebook.title)):
-            notebook.create_note(note_title)
+    """Creates note or notebook, depending on input.
+
+    :type args: str
+    """
+    note, notebook = split(args, ' in ')
+    if notebook:
+        notebook = choose_notebook(notebook)
+        if prompt('Create note {} in {}?'.format(note, notebook.title)):
+            notebook.create_note(note)
     else:
-        nb_title = args
-        if prompt('Create notebook {}?'.format(nb_title)):
-            pw.add_notebook(nb_title)
+        if prompt('Create notebook {}?'.format(note)):
+            pw.create_notebook(note)
 
 
 def tags():
@@ -150,7 +190,10 @@ def tags():
 
 
 def tag(args):
-    """Create a tag or tag a note with a tag, depending on input."""
+    """Create a tag or tag a note with a tag, depending on input.
+
+    :type args: str
+    """
     if ' with ' in args:
         args = args.split(' with ')
         note = choose_note(args[0])
@@ -164,7 +207,10 @@ def tag(args):
 
 
 def tagged(tag_title):
-    """Print notes tagged with tag."""
+    """Print notes tagged with tag.
+
+    :type tag_title: str
+    """
     tag = choose_tag(tag_title)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:
@@ -172,22 +218,23 @@ def tagged(tag_title):
 
 
 def print_help():
-    print("""The commands are self-explanatory. Notes and
-    notebooks are chosen through a fuzzy search.
+    print("""The commands are self-explanatory. Notes, tags and notebooks are chosen through a fuzzy search.
 
-update
-ls
-edit $note
-delete $title - takes effect on notes and notebooks
-move $note to $notebook
-create $note in $notebook - keyword 'in'
-create $notebook
-tags - print tags
-tag $note with $tag - tag $note with $tag
-tag $tag - create $tag
-tagged $tag - print notes tagged with $tag
-exit
-""")
+update                      Pushes local changes to the remote host
+ls                          List notebooks and notes
+edit $note                  edit note
+delete $notebook            delete notebook
+delete $note in $notebook   delete note in notebook
+move $note to $notebook     move note to notebook
+create $note in $notebook   create note in notebook
+create $notebook            create notebook
+tags                        list tags
+tag $note with $tag         tag note with tag
+tag $tag                    create $tag
+tagged $tag                 print notes tagged with $tag
+exit                        exit application
+"""
+          )
 
 cmd_dict = {
     'update': update,
@@ -207,10 +254,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v", "--verbose", help="verbose output", action="store_true")
+    parser.add_argument(
+        "--threading", help="enable multi-threading", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
+    if args.threading:
+        models.use_threading = True
     login()
     download()
 
@@ -230,7 +281,7 @@ def main():
                 cmd_dict[cmd]()
         else:
             logger.info('Invalid command')
-            print('{} unkown'.format(cmd))
+            print('{} unknown'.format(cmd))
         cmd = input('>')
 
 if __name__ == "__main__":

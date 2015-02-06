@@ -1,22 +1,47 @@
 from paperworks import wrapper
 from fuzzywuzzy import fuzz
 import logging
+from threading import Thread
 
-logger = logging.getLogger('models')
+try:
+    isinstance('string', basestring)
+except NameError:
+    basestring = str
+
+logger = logging.getLogger(__name__)
+
+use_threading = False
+
+
+def threaded_method(func):
+    """Decorator to put a function into background after calling,
+    if threading is enabled.
+    """
+    def run(*args, **kwargs):
+        if use_threading:
+            Thread(target=func, args=args, kwargs=kwargs).start()
+        else:
+            func(*args, **kwargs)
+    return run
 
 
 class Model:
-    def __init__(self, title, id, paperwork=None, updated_at=''):
-        self.id = id
+    def __init__(self, title, id, api):
+        """Model for paperwork-objects.
+
+        :type title: str
+        :type id: integer
+        :type api: wrapper.api
+        """
+        self.id = int(id)
         self.title = title
-        self.pw = paperwork
-        self.updated_at = updated_at
+        self.api = api
 
     def __str__(self):
         return "{}:'{}'".format(self.id, self.title)
 
     def to_json(self):
-        """Return model as json-dict."""
+        """Returns model as dict."""
         return {
             'id': self.id,
             'title': self.title
@@ -24,7 +49,10 @@ class Model:
 
     @classmethod
     def from_json(cls, json):
-        """Creates model from json-dict."""
+        """Creates model from json-dict.
+
+        :param dict json: dictionary of json data
+        """
         return cls(
             json['title'],
             json['id']
@@ -32,85 +60,135 @@ class Model:
 
 
 class Notebook(Model):
-    def __init__(self, title, id=0, paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork, updated_at)
-        self.notes = set()
+    def __init__(self, title, id, api, type=0, updated_at=''):
+        """Notebook paperwork-object.
+
+        :type title: str
+        :type id: integer
+        :type api: wrapper.api
+        :type updated_at: str
+        """
+        super().__init__(title, id, api)
+        self.type = type
+        self.updated_at = updated_at
+        self.notes = {}
 
     def to_json(self):
+        """Returns notebook as dict."""
         return {
-            'type': 0,
+            'type': self.type,
             'id': self.id,
             'title': self.title
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, api):
+        """Creates Notebook-instance from json-dict.
+
+        :param dict json: dictionary of json data
+        :param wrapper.api api: api-instance
+        """
         return cls(
             json['title'],
-            json['id']
-            )
+            json['id'],
+            api,
+            type=json['type'],
+            updated_at='')
 
-    def add_note(self, note):
-        """Adds note to notebook. Returns note instance."""
-        logger.info('Adding note {} to notebook {}'.format(note, self))
-        note.notebook = self
-        note.pw = self.pw
-        self.notes.add(note)
-        return note
+    @classmethod
+    def create(cls, api, title):
+        """Sends a POST request to the host to create a notebook.
 
-    def create_note(self, title, content=''):
-        """Creates note with given title and adds it to the
-        notebook. Returns note instance."""
-        return self.add_note(Note(title, content=content))
+        :param wrapper.api api: api-instance
+        :type title: str
+        """
+        logger.info('Created notebook {}'.format(title))
+        return cls.from_json(api.create_notebook(title), api)
 
-    def delete_note(self, note):
-        """Deletes note from notebook."""
-        logger.info('Removing note {} to notebook {}'.format(note, self))
-        note.notebook = None
-        self.notes.discard(note)
-
+    @threaded_method
     def delete(self):
         """Deletes notebook from remote host."""
-        if self.id == 0:
-            logger.error('Error while removing notebook {}'.format(self))
-        else:
-            self.pw.api.delete_notebook(self.id)
+        logger.info('Deleting notebook {}'.format(self))
+        self.api.delete_notebook(self.id)
 
-    # TODO (Nelo Wallus): Default force to true when api
-    # response is fixed
+    @threaded_method
     def update(self, force=True):
-        """Updates local or remote notebook, depending on
-        timestamp. Creates if notebook id is 0."""
-        if self.id == 0:
-            self.id = self.pw.api.create_notebook(self.title)['id']
+        """Updates local or remote notebook, depending on timestamp.
+
+        :param bool force: If true the local title is pushed,
+                           regardless of timestamp.
+        """
+        logger.info('Updating {}'.format(self))
+        remote = self.api.get_notebook(self.id)
+        if remote is None:
+            logger.error('Remote notebook could not be found.'
+                         'Wrong id or deleted.')
+        elif force or remote['updated_at'] < self.updated_at:
+            self.updated_at = self.api.update_notebook(
+                self.to_json())['updated_at']
         else:
-            remote = self.pw.api.get_notebook(self.id)
-            if remote is None:
-                logger.error(
-                    'Remote notebook could not be found. Wrong id or deleted.')
-            elif force or remote['updated_at'] < self.updated_at:
-                self.pw.api.update_notebook(self.to_json())
-            else:
-                logger.info(
-                    'Remote version is higher. Updating local notebook.')
-                self.title = remote['title']
-                self.updated_at = remote['updated_at']
+            logger.info('Remote version is higher.'
+                        'Updating local notebook.')
+            self.title = remote['title']
+            self.updated_at = remote['updated_at']
 
     def get_notes(self):
-        return sorted(self.notes, key=lambda note: note.title)
+        """Returns notes in an alphabetically sorted list.
+
+        :rtype: list"""
+        return sorted(self.notes.values(), key=lambda note: note.title)
+
+    @threaded_method
+    def create_note(self, title):
+        """Creates a note.
+
+        :type title: str
+        """
+        note = Note.create(title, self)
+        self.notes[note.id] = note
+        logger.info('Created note {} in {}'.format(note, self))
+
+    @threaded_method
+    def add_note(self, note):
+        """Adds a note to the notebook.
+
+        :type note: models.Note"""
+        self.notes[note.id] = note
+        logger.info('Added note {} to {}'.format(note, self))
+
+    def download(self, tags):
+        """Downloads notes.
+
+        :param dict tags: Tags of the paperwork instance.
+        """
+        notes_json = self.api.list_notebook_notes(self.id)
+        logger.info('Downloading notes of notebook {}'.format(self))
+        for note_json in notes_json:
+            note = Note.from_json(note_json, self)
+            self.add_note(note)
+            note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
 
 
 class Note(Model):
-    def __init__(
-            self, title, id=0, content='', tags=set(),
-            paperwork=None, updated_at=''):
-        super().__init__(title, id, paperwork, updated_at)
+    def __init__(self, title, id, notebook, content='', updated_at=''):
+        """Note paperwork-object.
+
+        :type title: str
+        :type id: int or str
+        :type notebook: Notebook
+        :type content: str
+        :type updated_at: str
+        """
+        super().__init__(title, id, notebook.api)
+        self.notebook = notebook
         self.content = content
-        # TODO (Nelo Wallus): This is ugly.
+        self.updated_at = updated_at
         self.tags = set()
-        self.add_tags(tags)
+        self.versions = []
+        self.attachments = []
 
     def to_json(self):
+        """Returns note as dict."""
         return {
             'id': self.id,
             'title': self.title,
@@ -120,85 +198,234 @@ class Note(Model):
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, notebook):
+        """Creates note from dict.
+
+        :type json: dict
+        :type notebook: Notebook
+        """
         return cls(
             json['title'],
             json['id'],
+            notebook,
             json['content'],
-            updated_at=json['updated_at']
+            json['updated_at']
             )
 
-    def add_tag(self, tag):
-        """Adds tag to note. Sets reference to note in tag."""
-        logger.info('Adding tag {} to note {}'.format(tag, self))
-        tag.notes.add(self)
-        self.tags.add(tag)
+    @classmethod
+    def create(cls, title, notebook):
+        """Creates note in notebook.
 
-    def add_tags(self, tags):
-        """Adds multiple tags to note."""
-        for tag in tags:
-            self.add_tag(tag)
+        :type title: str
+        :type notebook: Notebook
+        """
+        logger.info('Creating note {} in notebook'.format(title, notebook))
+        res = notebook.api.create_note(notebook.id, title)
+        return cls(
+            title,
+            res['id'],
+            notebook,
+            '',
+            res['updated_at']
+            )
 
-    def string_tags(self):
-        """Returns tag names in a string, separated by spaces."""
-        ret = ''
-        for tag in self.tags:
-            ret += tag.title + ' '
-        return ret
-
-    def move_to(self, notebook):
-        """Moves note to given notebook instance."""
-        if None in (notebook, self.notebook) or 0 in (
-                notebook.id, self.notebook.id, self.id):
-            logger.error('Error while moving note {} from {} to {}'.format(
-                self, self.notebook, notebook))
-        else:
-            self.pw.api.move_note(self.to_json(), notebook.id)
-        self.notebook.delete_note(self)
-        notebook.add_note(self)
-
-    def delete(self):
-        """Deletes note."""
-        if self.id == 0:
-            logger.error('Error while removing note {}'.format(self))
-        else:
-            self.pw.api.delete_note(self.to_json())
-        self.notebook.delete_note(self)
-
+    @threaded_method
     def update(self, force=False):
-        """Updates local or remote note, depending on
-        timestamp. Creates if note id is 0."""
-        if self.id == 0:
-            self.id = self.pw.api.create_note(
-                self.notebook.id, self.title, self.content)['id']
+        """Updates local or remote note, depending on timestamp.
+
+        :param bool force: If true local values will be pushed regardless
+                           of timestamp.
+        """
+        logger.info('Updating note {}'.format(self))
+        remote = self.api.get_note(self.notebook.id, self.id)
+        if remote is None:
+            logger.error('Remote note could not be found. Wrong id,'
+                         'deleted or moved to another notebook')
+        elif force or remote['updated_at'] <= self.updated_at:
+            logger.info('Remote version is lower or force update.'
+                        'Updating remote note.')
+            self.updated_at = self.api.update_note(
+                self.to_json())['updated_at']
         else:
-            remote = self.pw.api.get_note(self.notebook.id, self.id)
-            if remote is None:
-                logger.error('Remote note could not be found. Wrong id,'
-                             'deleted or moved to another notebook')
-            elif remote['updated_at'] <= self.updated_at or force:
-                logger.info('Remote version is lower or force update.'
-                            'Updating remote note.')
-                self.pw.api.update_note(self.to_json())
-            else:
-                logger.info('Remote version is higher. Updating local note.')
-                self.title = remote['title']
-                self.content = remote['content']
-                self.updated_at = remote['updated_at']
-                self.tags = set()
-                # TODO (Nelo Wallus): Create tags with
-                # correct id if not available
-                for tag in remote['tags']:
-                    self.add_tag(self.pw.find_or_create_tag(tag['title']))
+            logger.info('Remote version is higher. Updating local note.')
+            self.title = remote['title']
+            self.content = remote['content']
+            self.updated_at = remote['updated_at']
+
+    @threaded_method
+    def delete(self):
+        """Deletes note from remote host and notebook."""
+        logger.info('Deleting note {} in notebook {}'.format(
+            self, self.notebook))
+        if self.id in self.notebook.notes:
+            del(self.notebook.notes[self.id])
+        self.api.delete_note(self.to_json())
+
+    @threaded_method
+    def add_tags(self, tags):
+        """Adds a collection of tags to the note.
+
+        :type tags: list or set"""
+        for tag in tags:
+            logger.info('Adding tag {} to note {}'.format(tag, self))
+            self.tags.add(tag)
+
+    @threaded_method
+    def move_to(self, new_notebook):
+        """Moves note to new_notebook.
+
+        :type new_notebook: Notebook
+        """
+        self.api.move_note(self.to_json(), new_notebook.id)
+        del(self.notebook.notes[self.id])
+        new_notebook.add_note(self)
+
+    def list_versions(self):
+        """Lists versions of a note.
+
+        Also sets note.versions list in case of future reference.
+        :rtype: list
+        """
+        self.versions = [Version.from_json(version)
+                         for version in self.api.list_note_versions(self)]
+        return self.versions
+
+    def list_attachments(self):
+        """Lists attachments of a note.
+
+        Also sets note.attachments list in case of future reference.
+        :rtype: list
+        """
+        self.attachments = [
+            Attachment.from_json(attachment, 0)
+            for attachment in self.api.list_note_attachments(self)]
+        return self.attachments
+
+
+class Version:
+    def __init__(self, note, title, id, previous_id, next_id,
+                 content, updated_at):
+        """Class representing a version of a note.
+
+        :type title: str
+        :param int or str id: ID of the version - not the note
+        :type previous_id: int or str
+        :type next_id: int or str
+        :type content: str
+        :param str updated_at: Timestamp of the last update.
+            Same as the creation date of the next version.
+        """
+        self.note = note
+        self.title = title
+        self.id = int(id)
+        self.previous_id = int(previous_id)
+        self.next_id = int(next_id)
+        self.content = content
+        self.updated_at = updated_at
+        self.attachments = []
+
+    @classmethod
+    def from_json(cls, note, json):
+        """Parses version of a note from dict.
+
+        :type note: models.Note
+        :type json: dict
+        """
+        return cls(
+            note,
+            json['title'],
+            json['id'],
+            json['previous_id'],
+            json['next_id'],
+            json['content'],
+            json['updated_at']
+            )
+
+    def list_attachments(self):
+        """Lists attachments of a note version.
+
+        Also sets version.attachments list in case of future reference.
+        :rtype: list
+        """
+        self.attachments = [
+            Attachment.from_json(attachment, self.id)
+            for attachment in
+            self.note.api.list_note_version_attachments(self.note, self.id)]
+        return self.attachments
+
+
+class Attachment:
+    def __init__(self, note, filename, id, version_id, mimetype, size,
+                 updated_at):
+        """Class representing an attachment of a note.
+
+        :type note: models.Note
+        :type filename: str
+        :type id: int or str
+        :type version_id: int or str
+        :type mimetype: str
+        :param str size: size in bits
+        :type updated_at: str
+        """
+        self.note = note
+        self.filename = filename
+        self.id = int(id)
+        self.version_id = int(version_id)
+        self.mimetype = mimetype
+        self.size = size
+        self.updated_at = updated_at
+
+    @classmethod
+    def from_json(cls, note, json):
+        """Parses attachment from dict.
+
+        :type json: dict
+        :type note: models.Note
+        """
+        return cls(
+            note,
+            json['filename'],
+            json['id'],
+            json['mimetype'],
+            json['size'],
+            json['updated_at']
+            )
+
+    @threaded_method
+    def download_to(self, path):
+        """Downloads attachment to specified path.
+
+        :type path: str
+        """
+        self.note.api.download_note_attachment(self.note, self.id, path)
+
+    @threaded_method
+    def delete(self):
+        """Deletes attachment on remote server."""
+        self.note.api.delete_note_version_attachment(
+            self.note,
+            self.version_id,
+            self.id
+            )
+        if self in self.note.attachments:
+            self.note.attachments.remove(self)
 
 
 class Tag(Model):
-    def __init__(self, title, id=0, visibility=0, notes=set(), paperwork=None):
-        super().__init__(title, id, paperwork)
+    def __init__(self, title, id, api, visibility=0):
+        """Tag paperwork-object.
+
+        :type title: str
+        :type id: int or str
+        :type api: wrapper.api
+        :type visibility: int
+        """
+        super().__init__(title, id, api)
         self.visibility = visibility
-        self.notes = notes
+        self.notes = set()
 
     def to_json(self):
+        """Returns tag as dict."""
         return {
             'id': self.id,
             'title': self.title,
@@ -206,64 +433,78 @@ class Tag(Model):
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json, api):
+        """Creates tag from dict.
+
+        :type json: dict
+        :type api: wrapper.api
+        """
         return cls(
             json['title'],
             json['id'],
+            api,
             json['visibility']
             )
 
     def get_notes(self):
-        """Returns notes in a sorted list."""
+        """Returns notes in a sorted list.
+
+        :rtype: list"""
         return sorted(self.notes, key=lambda note: note.title)
 
 
 class Paperwork:
-    def __init__(self, user, passwd, host='http://demo.paperwork.rocks/'):
-        self.notebooks = set()
-        self.tags = set()
-        self.api = wrapper.api(user, passwd, host)
+    def __init__(self, user, passwd, host):
+        """Paperwork object.
 
+        :type user: str
+        :type passwd: str
+        :type host: str
+        """
+        self.notebooks = {}
+        self.tags = {}
+        self.api = wrapper.api()
+        self.authenticated = self.api.basic_authentication(host, user, passwd)
+
+    def create_notebook(self, title):
+        """Creates notebook and adds it to paperwork.
+
+        :type title: str
+        :rtype: Notebook
+        """
+        if title != 'All Notes':
+            notebook = Notebook.create(self.api, title)
+            self.notebooks[notebook.id] = notebook
+            logger.info('Created notebook {}'.format(notebook))
+            return notebook
+
+    @threaded_method
+    def delete_notebook(self, nb):
+        """Deletes notebook from server and instance.
+
+        :type nb: Notebook
+        """
+        nb.delete()
+        del(self.notebooks[nb.id])
+
+    @threaded_method
     def add_notebook(self, notebook):
-        """Add a notebook to the paperwork instance. Returns
-        notebook instance."""
-        if isinstance(notebook, str):
-            notebook = Notebook(notebook)
-        logger.info('Added notebook {}'.format(notebook))
-        notebook.pw = self
-        self.notebooks.add(notebook)
-        return notebook
+        """Adds notebook to paperwork.
 
+        :type notebook: Notebook
+        """
+        if notebook.id != 0:
+            self.notebooks[notebook.id] = notebook
+            logger.info('Added notebook {}'.format(notebook))
+
+    @threaded_method
     def add_tag(self, tag):
-        """Add a tag to the paperwork instance. Return tag instance."""
-        if isinstance(tag, str):
-            tag = Tag(tag)
+        """Adds tag to paperwork.
+
+        :type tag: Tag
+        """
+        self.tags[tag.id] = tag
         logger.info('Added tag {}'.format(tag))
-        tag.pw = self
-        self.tags.add(tag)
-        return tag
-
-    def get_notes(self):
-        """Returns notes in a sorted list."""
-        return sorted([note for nb in self.notebooks for note in nb.notes],
-                      key=lambda note: note.title)
-
-    def get_notebooks(self):
-        """Returns notebooks in a sorted list."""
-        return sorted(self.notebooks, key=lambda nb: nb.title)
-
-    def get_tags(self):
-        """Returns tags in a sorted list."""
-        return sorted(self.tags, key=lambda tag: tag.title)
-
-    def parse_json(self, json):
-        """Parse given json into tag, note or notebook."""
-        if 'visibility' in json.keys():
-            return Tag.from_json(json)
-        elif 'content' in json.keys():
-            return Note.from_json(json)
-        else:
-            return Notebook.from_json(json)
 
     def download(self):
         """Downloading tags, notebooks and notes from host."""
@@ -271,59 +512,88 @@ class Paperwork:
 
         logger.info('Downloading tags')
         for tag in self.api.list_tags():
-            self.add_tag(self.parse_json(tag))
+            tag = Tag.from_json(tag, self.api)
+            self.tags[tag.id] = tag
 
         logger.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
-            self.add_notebook(self.parse_json(notebook))
+            if notebook['title'] != 'All Notes':
+                notebook = Notebook.from_json(notebook, self.api)
+                self.add_notebook(notebook)
+                notebook.download(self.tags)
+            else:
+                logger.info('Skipping notebook {}'.format(notebook))
 
-        for nb in self.notebooks:
-            if 'All Notes' in nb.title:
-                logger.info('Not downloading notebook {}'.format(nb))
-            logger.info('Downloading notes of notebook {}'.format(nb))
-            notes_json = self.api.list_notebook_notes(nb.id)
-            for note_json in notes_json:
-                note = Note.from_json(note_json)
-                note.add_tags(
-                    [self.find_or_create_tag(tag['title'])
-                        for tag in note_json['tags']]
-                    )
-                nb.add_note(note)
-
+    @threaded_method
     def update(self):
         """Updating notebooks and notes to host."""
         logger.info('Updating notebooks and notes')
-        for nb in self.notebooks:
-            if 'All Notes' in nb.title:
-                logger.info('Not updating notebook {}'.format(nb))
+        for nb in self.notebooks.values():
             nb.update()
-            for note in nb.notes:
+            for note in nb.get_notes():
                 note.update()
 
-    def find_tag(self, key):
-        """Finds tag with key (id or title)."""
-        for tag in self.tags:
-            if key in (tag.id, tag.title):
-                return tag
+    def find(self, key, coll):
+        """Finds key in given dict.
 
-    def find_or_create_tag(self, title):
-        """Return tag if found, else return new tag instance."""
-        return self.find_tag(title) or self.add_tag(Tag(title))
+        :type key: str or int
+        :type coll: dict
+        :rtype: Notebook or Note or Tag or None
+        """
+        logger.info('Searching item for key {} of type {}'.format(
+            key, type(key)))
+        if isinstance(key, basestring):
+            for item in coll.values():
+                if key == item.title:
+                    return item
+            logger.error('No item found for key {} of type {}'.format(
+                key, type(key)))
+        else:
+            return coll[key]
+
+    def find_tag(self, key):
+        """Finds tag with key (id or title).
+
+        :type key: str or int
+        :rtype: Tag or None
+        """
+        return self.find(key, self.tags)
 
     def find_notebook(self, key):
-        """Find notebook with key (id or title)."""
-        for notebook in self.notebooks:
-            if key in (notebook.id, notebook.title):
-                return notebook
+        """Find notebook with key (id or title).
+
+        :type key: str or int
+        :rtype: Notebook or None
+        """
+        return self.find(key, self.notebooks)
 
     def find_note(self, key):
-        """Find note with key (id or title)."""
-        for note in self.get_notes():
-            if key in (note.id, note.title):
-                return note
+        """Find note with key (id or title).
+
+        :type key: str or int
+        :rtype: Note or None
+        """
+        logger.info('Searching note for key {} of type {}'.format(
+            key, type(key)))
+        if isinstance(key, basestring):
+            for item in self.get_notes():
+                if key == item.title:
+                    return item
+        else:
+            logger.info('key is int, finding through keys')
+            for nb in self.notebooks.values():
+                if key in nb.notes:
+                    return nb.notes[key]
+        logger.error('No note found for key {} of type {}'.format(
+            key, type(key)))
 
     def fuzzy_find(self, title, choices):
-        """Fuzzy find for title in choices. Returns highest match."""
+        """Fuzzy find for title in choices. Returns highest match.
+
+        :type title: str
+        :type choices: list or set or tuple
+        :rtype: Tag or Note or Notebook
+        """
         top_choice = (0, None)
         for choice in choices:
             val = fuzz.ratio(choice.title, title)
@@ -333,20 +603,56 @@ class Paperwork:
 
     def fuzzy_find_tag(self, title):
         """Fuzzy search for tag with given title."""
-        return self.fuzzy_find(title, self.get_tags())
+        return self.fuzzy_find(title, self.tags.values())
 
     def fuzzy_find_notebook(self, title):
-        """Fuzzy search for notebook with given title."""
-        return self.fuzzy_find(title, self.get_notebooks())
+        """Fuzzy search for notebook with given title.
+
+        :type title: str
+        :rtype: Notebook
+        """
+        return self.fuzzy_find(title, self.notebooks.values())
 
     def fuzzy_find_note(self, title):
-        """Fuzze search for note with given title."""
+        """Fuzze search for note with given title.
+
+        :type title: str
+        :rtype: Note
+        """
         return self.fuzzy_find(title, self.get_notes())
 
     def search(self, key):
-        """Searches for given key and returns note-instances."""
+        """Searches for given key and returns note-instances.
+
+        :type key: str
+        :rtype: List
+        """
         json_notes = self.api.search(key)
         notes = []
         for json_note in json_notes:
             self.find_note(json_note['id'])
         return notes
+
+    def get_notes(self):
+        """Returns notes in a sorted list.
+
+        :rtype: list
+        """
+        return sorted(
+            [note for nb in self.notebooks.values()
+             for note in nb.notes.values()],
+            key=lambda note: note.title)
+
+    def get_notebooks(self):
+        """Returns notebooks in a sorted list.
+
+        :rtype: list
+        """
+        return sorted(self.notebooks.values(), key=lambda nb: nb.title)
+
+    def get_tags(self):
+        """Returns tags in a sorted list.
+
+        :rtype: list
+        """
+        return sorted(self.tags.values(), key=lambda tag: tag.title)

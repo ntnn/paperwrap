@@ -53,7 +53,7 @@ if __name__ == "__main__":
         ],
 
         entry_points={
-            'console_scripts': ['paperworks = paperworks.paperworks:main']
+            'console_scripts': ['paperworks = paperworks.cli:main']
             },
 
         install_requires=['PyYAML', 'fuzzywuzzy', 'python-Levenshtein'],
