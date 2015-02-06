@@ -77,7 +77,7 @@ class api:
         else:
             return False
 
-    def request(self, method, keyword, *args, **kwargs):
+    def request(self, method, keyword, *ids, **data):
         """Sends a request to the host and returns the parsed json data
         if successfull.
 
@@ -86,20 +86,15 @@ class api:
         :rtype: dict or None
         """
         try:
-            uri = self.host + api_version + api_path[keyword].format(*args)
-            data, files = None, None
-            if 'file' in kwargs:
-                self.headers['Content-Type'] = 'multipart/form-data'
-                files = kwargs
-            elif kwargs:
+            uri = self.host + api_version + api_path[keyword].format(*ids)
+            if data:
                 self.headers['Content-Type'] = 'application/json'
-                data = json.dumps(kwargs)
+                data = json.dumps(data)
             logger.info(
-                '{} request to {}:\ndata: {}\nfiles: {}\nheaders:{}'.format(
-                    method, uri, data, files, self.headers))
-            request = method(uri, data=data, files=files, headers=self.headers)
+                '{} request to {}:\ndata: {}\nheaders: {}'.format(
+                    method, uri, data, self.headers))
+            request = method(uri, data=data, headers=self.headers)
             res = request.text
-            logger.info(res)
             if keyword == 'attachment_raw':
                 return res
             json_res = json.loads(res)
@@ -111,39 +106,39 @@ class api:
         except Exception as e:
             logger.error(e)
 
-    def get(self, keyword, *args):
+    def get(self, keyword, *ids):
         """Convenience wrapper for GET request.
 
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.get, keyword, *args)
+        return self.request(requests.get, keyword, *ids)
 
-    def post(self, data, keyword, *args):
+    def post(self, data, keyword, *ids):
         """Convenience wrapper for POST request.
 
         :type data: dict
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.post, keyword, *args, **data)
+        return self.request(requests.post, keyword, *ids, **data)
 
-    def put(self, data, keyword, *args):
+    def put(self, data, keyword, *ids):
         """Convenience wrapper for PUT request.
 
         :type data: dict
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.put, keyword, *args, **data)
+        return self.request(requests.put, keyword, *ids, **data)
 
-    def delete(self, keyword, *args):
+    def delete(self, keyword, *ids):
         """Convenience wrapper for DELETE request.
 
         :type keyword: str
         :rtype: dict or list or None
         """
-        return self.request(requests.delete, keyword, *args)
+        return self.request(requests.delete, keyword, *ids)
 
     def list_notebooks(self):
         """Return all notebooks in a list.
