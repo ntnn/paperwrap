@@ -44,7 +44,7 @@ def b64(string):
 def concatenate_ids(coll):
     """Concatenates a collection of dicts ID's.
 
-    :type coll: list or tuple or dict
+    :type coll: collection of dicts
     :rtype: string
     """
     return ','.join([str(item['id']) for item in coll])
@@ -240,7 +240,7 @@ class api:
     def delete_note(self, note):
         """Delete note.
 
-        :type note: models.Note
+        :type note: dict
         :rtype: dict
         """
         return self.delete_notes([note])[0]
@@ -259,7 +259,7 @@ class api:
     def move_note(self, note, new_notebook_id):
         """Moves note to new_notebook_id.
 
-        :type note: models.Note
+        :type note: dict
         :type new_notebook_id: int
         :rtype: dict
         """
@@ -281,7 +281,7 @@ class api:
     def list_note_versions(self, note):
         """Returns a list of versions of given note.
 
-        :type note: models.Note
+        :type note: dict
         :rtype: list
         """
         return self.list_notes_versions([note])
@@ -300,7 +300,7 @@ class api:
     def get_note_version(self, note, version_id):
         """Returns version with version_id of note.
 
-        :type note: models.Note
+        :type note: dict
         :type version_id: int
         :rtype: dict
         """
@@ -309,7 +309,7 @@ class api:
     def list_note_attachments(self, note):
         """List attachments of note.
 
-        :type note: models.Note
+        :type note: dict
         :rtype: list
         """
         return self.list_note_version_attachments(note, 0)
@@ -317,7 +317,7 @@ class api:
     def list_note_version_attachments(self, note, version_id):
         """List attachments of a note belonging to a specific version.
 
-        :type note: models.Note
+        :type note: dict
         :type version_id: int
         :rtype: list
         """
@@ -330,7 +330,7 @@ class api:
     def get_note_attachment(self, note, attachment_id):
         """Returns info about attachment with attachment_id of note.
 
-        :type note: models.Note
+        :type note: dict
         :type attachment_id: int
         :rtype: dict
         """
@@ -339,7 +339,7 @@ class api:
     def get_note_version_attachment(self, note, version_id, attachment_id):
         """Returns info about attachment with attachment_id of note version.
 
-        :type note: models.Note
+        :type note: dict
         :type version_id: int
         :type attachment_id: int
         :rtype: dict
@@ -355,7 +355,7 @@ class api:
         """Downloads attachment to specified path.
 
         Returns true in case of success, false otherwise.
-        :type note: models.Note
+        :type note: dict
         :type attachment_id: int
         :type path: str
         :rtype: bool
@@ -375,7 +375,7 @@ class api:
         """Downloads attachment of note version to specified path.
 
         Returns true in case of success, false otherwise.
-        :type note: models.Note
+        :type note: dict
         :type version_id: int
         :type attachment_id: int
         :type path: str
@@ -398,7 +398,7 @@ class api:
     def delete_note_attachment(self, note, attachment_id):
         """Deletes attachment with attachment_id on note.
 
-        :type note: models.Note
+        :type note: dict
         :type attachment_id: int
         :rtype: dict
         """
@@ -407,7 +407,7 @@ class api:
     def delete_note_version_attachment(self, note, version_id, attachment_id):
         """Deletes attachment with attachment_id on note.
 
-        :type note: models.Note
+        :type note: dict
         :type version_id: int
         :type attachment_id: int
         :rtype: dict
@@ -422,14 +422,15 @@ class api:
     def upload_attachment(self, note, path):
         """Uploads an attachment.
 
-        :type note: models.Note
+        :type note: dict
         :type path: str
-        :rtype: bool
+        :rtype: dict
         """
+        logger.info('Uploading file at {} to {}'.format(path, note))
         return requests.post(
             self.host + api_version + api_path['attachments'].format(
-                note.notebook.id,
-                note.id,
+                note['notebook_id'],
+                note['id'],
                 0
                 ),
             files={'file': open(path, 'rb')},

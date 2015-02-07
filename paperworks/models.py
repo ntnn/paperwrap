@@ -307,7 +307,7 @@ class Note(Model):
 
         :type path: str
         """
-        self.api.upload_attachment(self, path)
+        self.api.upload_attachment(self.to_json(), path)
 
 
 class Version:
