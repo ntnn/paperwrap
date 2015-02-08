@@ -363,7 +363,7 @@ class Version:
 
 
 class Attachment:
-    def __init__(self, note, filename, id, mimetype,
+    def __init__(self, note, title, id, version_id, mimetype,
                  updated_at):
         """Class representing an attachment of a note.
 
@@ -375,8 +375,9 @@ class Attachment:
         :type updated_at: str
         """
         self.note = note
-        self.filename = filename
+        self.title = title
         self.id = int(id)
+        self.version_id = int(version_id)
         self.mimetype = mimetype
         self.updated_at = updated_at
 
@@ -391,6 +392,7 @@ class Attachment:
             note,
             json['filename'],
             json['id'],
+            json['pivot']['version_id'],
             json['mimetype'],
             json['updated_at']
             )
