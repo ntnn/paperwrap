@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 pw = None
 
+att_note_sep = ' to '
+note_nb_sep = ' in '
+
 
 def login():
     """Creates Paperwork instance.
@@ -55,34 +58,50 @@ def print_all():
         for note in nb.get_notes():
             print("- {}".format(note.title))
             for attachment in note.attachments:
-                print("-- {}".format(attachment.filename))
+                print("-- {}".format(attachment.title))
 
 
-def choose_note(title):
-    """Finds note in paperwork.
+def split(args, splitter):
+    """Splits string with splitter and returns the resulting strings,
 
-    :type title: str
-    :rtype: models.Note
+    if the splitter is in the string. If not None and the string is returned.
+    :type args: str
+    :type splitter: str
+    :rtype: list
     """
-    return pw.fuzzy_find_note(title)
+    if splitter in args:
+        return args.split(splitter)
+    else:
+        return None, args
 
 
-def choose_notebook(title):
-    """Finds notebook in paperwork.
+def split_args(args):
+    """Splits sring into attachment, note and notebook string.
 
-    :type title: str
-    :rtype: models.Notebook
+    :type args: str
+    :rtype: list
     """
-    return pw.fuzzy_find_notebook(title)
+    attachment, args = split(args, att_note_sep)
+    note, notebook = split(args, note_nb_sep)
+    return attachment, note, notebook
 
 
-def choose_tag(title):
-    """Finds tag in paperwork.
+def split_and_search_args(args):
+    """Parses attachment, note and notebook.
 
-    :type title: str
-    :rtype: models.Tag
+    Returns a list of three items with [attachment, note, notebook]
+    :type args: str
+    :param bool search: If true the method searches for objects and
+        returns them instead of strings.
+    :rtype: list
     """
-    return pw.fuzzy_find_tag(title)
+    attachment, note, notebook = split_args(args)
+    notebook = pw.fuzzy_find(notebook, pw.notebooks)
+    if note:
+        note = pw.fuzzy_find(note, notebook.notes)
+    if attachment:
+        attachment = pw.fuzzy_find(attachment, note.attachments)
+    return attachment, note, notebook
 
 
 def prompt(text, important=False):
@@ -107,7 +126,7 @@ def edit(title):
 
     :type title: str
     """
-    note = choose_note(title)
+    note = split_and_search_args(title)[1]
     logger.info('Getting $EDITOR')
     editor = os.environ.get('EDITOR')
 
@@ -127,33 +146,25 @@ def edit(title):
     logger.info('Removing temporary file')
     tmpfile.close()
 
-
-def split(args, splitter):
-    """Splits string with splitter and returns the resulting strings.
-
-    :type args: str
-    :type splitter: str
-    :rtype: str and str
-    """
-    if splitter in args:
-        return args.split(splitter)
-    else:
-        return args, None
+    logger.info('Updating remote note')
+    note.update()
 
 
 def delete(args):
-    """Delete note or notebook, depending on input.
+    """Delete note, notebook or attachment, depending on input.
 
     :type args: str
     """
-    note, notebook = split(args, ' in ')
-    if notebook:
-        note = choose_note(note)
-        notebook = choose_notebook(notebook)
-        if prompt('Delete note {} in {}?'.format(note.title, notebook.title)):
+    attachment, note, notebook = split_and_search_args(args)
+    if attachment:
+        if prompt('Delete attachment {} to {} in {}?'.format(
+                attachment.title, note.title, notebook.title)):
+            attachment.delete()
+    elif note:
+        if prompt('Delete note {} in {}?'.format(
+                note.title, notebook.title)):
             note.delete()
     else:
-        notebook = choose_notebook(note)
         if prompt('Delete notebook {}?'.format(notebook.title)):
             pw.delete_notebook(notebook)
 
@@ -163,9 +174,11 @@ def move(args):
 
     :type args: str
     """
-    note, notebook = split(args, ' to ')
-    note = choose_note(note)
-    notebook = choose_notebook(notebook)
+    # splits off the new notebook at the end first, so it
+    # doesn't mess with the split_args function
+    args, notebook = split(args, ' to ')
+    notebook = pw.fuzzy_find(notebook, pw.notebooks)
+    note = split_and_search_args(args)[1]
     if prompt('Move note {} to {}?'.format(note.title, notebook.title)):
         note.move_to(notebook)
 
@@ -175,14 +188,14 @@ def create(args):
 
     :type args: str
     """
-    note, notebook = split(args, ' in ')
-    if notebook:
-        notebook = choose_notebook(notebook)
+    if note_nb_sep in args:
+        note, notebook = split_args(args)[1:]
+        notebook = pw.fuzzy_find(notebook, pw.notebooks)
         if prompt('Create note {} in {}?'.format(note, notebook.title)):
             notebook.create_note(note)
     else:
-        if prompt('Create notebook {}?'.format(note)):
-            pw.create_notebook(note)
+        if prompt('Create notebook {}?'.format(args)):
+            pw.create_notebook(args)
 
 
 def tags():
@@ -197,15 +210,15 @@ def tag(args):
     :type args: str
     """
     if ' with ' in args:
-        args = args.split(' with ')
-        note = choose_note(args[0])
-        tag = choose_tag(args[1])
+        # Again, split tag before
+        args, tag = split(args, ' with ')
+        tag = pw.fuzzy_find(tag, pw.tags)
+        note = split_and_search_args(args)[1]
         if prompt('Tag note {} with {}?'.format(note.title, tag.title)):
             note.add_tag(tag)
     else:
-        tag_title = args
-        if prompt('Create tag {}?'.format(tag_title)):
-            pw.add_tag(tag_title)
+        if prompt('Create tag {}?'.format(args)):
+            pw.add_tag(args)
 
 
 def tagged(tag_title):
@@ -213,37 +226,37 @@ def tagged(tag_title):
 
     :type tag_title: str
     """
-    tag = choose_tag(tag_title)
+    tag = pw.fuzzy_find(tag_title, pw.tags)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:
         print(note.title)
 
 
 def upload(args):
-    f, note = split(args, ' to ')
-    try:
-        note = choose_note(note)
-        note.upload_file(f)
-    except Exception as e:
-        logger.error(e)
+    filepath, note, notebook = split_args(args)
+    notebook = pw.fuzzy_find(notebook, pw.notebooks)
+    note = pw.fuzzy_find(note, notebook.notes)
+    note.upload_file(filepath)
 
 
 def print_help():
     print("""The commands are self-explanatory. Notes, tags and notebooks are chosen through a fuzzy search.
 
-update                      Pushes local changes to the remote host
-ls                          List notebooks and notes
-edit $note                  edit note
-delete $notebook            delete notebook
-delete $note in $notebook   delete note in notebook
-move $note to $notebook     move note to notebook
-create $note in $notebook   create note in notebook
-create $notebook            create notebook
-tags                        list tags
-tag $note with $tag         tag note with tag
-tag $tag                    create $tag
-tagged $tag                 print notes tagged with $tag
-exit                        exit application
+update                                      Pushes local changes to the remote host
+ls                                          List notebooks and notes
+edit $note                                  edit note
+delete $notebook                            delete notebook
+delete $note in $notebook                   delete note in notebook
+delete $attachment to $note in $notebook    Delete attachment to note in notebook
+upload $filepath to $note in $notebook      Upload file at $filepath as attachment to note in notebook
+move $note to $notebook                     move note to notebook
+create $note in $notebook                   create note in notebook
+create $notebook                            create notebook
+tags                                        list tags
+tag $note with $tag                         tag note with tag
+tag $tag                                    create $tag
+tagged $tag                                 print notes tagged with $tag
+exit                                        exit application
 """
           )
 
