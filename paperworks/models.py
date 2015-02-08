@@ -597,35 +597,18 @@ class Paperwork:
         """Fuzzy find for title in choices. Returns highest match.
 
         :type title: str
-        :type choices: list or set or tuple
+        :type choices: dict or list
         :rtype: Tag or Note or Notebook
         """
+        if isinstance(choices, dict):
+            choices = list(choices.values())
         top_choice = (0, None)
         for choice in choices:
             val = fuzz.ratio(choice.title, title)
+            logger.info('{} to {}: {}'.format(choice.title, title, val))
             if val > top_choice[0]:
                 top_choice = (val, choice)
         return top_choice[1]
-
-    def fuzzy_find_tag(self, title):
-        """Fuzzy search for tag with given title."""
-        return self.fuzzy_find(title, self.tags.values())
-
-    def fuzzy_find_notebook(self, title):
-        """Fuzzy search for notebook with given title.
-
-        :type title: str
-        :rtype: Notebook
-        """
-        return self.fuzzy_find(title, self.notebooks.values())
-
-    def fuzzy_find_note(self, title):
-        """Fuzze search for note with given title.
-
-        :type title: str
-        :rtype: Note
-        """
-        return self.fuzzy_find(title, self.get_notes())
 
     def search(self, key):
         """Searches for given key and returns note-instances.
