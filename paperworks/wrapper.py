@@ -51,27 +51,20 @@ def concatenate_ids(coll):
 
 
 class api:
-    def __init__(self, user_agent=default_agent):
+    def __init__(self, host, user_agent=default_agent):
         """Api instance.
 
+        :type host: str
         :type user_agent: str
         """
-        self.user_agent = user_agent
+        self.headers = {'User-Agent': user_agent}
+        self.host = host if 'http://' in host else 'http://' + host
 
-    def basic_authentication(self, host, user, passwd):
-        """Basic authentication with host.
+    def test_connection(self):
+        """Tests connection.  Returns false if connection fails.
 
-        Returns false if connection fails.
-        :type host: str
-        :type user: str
-        :type passwd: str
         :rtype: bool
         """
-        self.host = host if 'http://' in host else 'http://' + host
-        self.headers = {
-            'Authorization': 'Basic ' + b64('{}:{}'.format(user, passwd)),
-            'User-Agent': self.user_agent
-            }
         if self.get('notebooks'):
             return True
         else:

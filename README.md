@@ -14,6 +14,5 @@ PyPI entry: [paperworks](https://pypi.python.org/pypi/paperworks/)
 
 #Command Line Interface  
 `paperworks` connects to the remote host and provides a command line interface to manage the notes. 
-If a file `.paperworkrc` in `$HOME` exists `paperworks` parses the credentials. If no such file exists the credentials can be entered via prompt.
-`help` will display the available commands. 
+The credentials are read with requests from the `.netrc` file. 
 

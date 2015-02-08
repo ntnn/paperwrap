@@ -460,17 +460,15 @@ class Tag(Model):
 
 
 class Paperwork:
-    def __init__(self, user, passwd, host):
+    def __init__(self, host):
         """Paperwork object.
 
-        :type user: str
-        :type passwd: str
         :type host: str
         """
         self.notebooks = {}
         self.tags = {}
-        self.api = wrapper.api()
-        self.authenticated = self.api.basic_authentication(host, user, passwd)
+        self.api = wrapper.api(host)
+        self.authenticated = self.api.test_connection()
 
     def create_notebook(self, title):
         """Creates notebook and adds it to paperwork.

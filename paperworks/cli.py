@@ -21,21 +21,9 @@ note_nb_sep = ' in '
 
 def login():
     """Creates Paperwork instance.
-    Reads credentials from rc-file or prompts."""
+    Reads credentials from netrc or prompts."""
     global pw
-    rc = os.environ.get('HOME')+'/.paperworkrc'
-    if os.path.exists(rc):
-        with open(rc, 'r') as f:
-            conf = yaml.load(f)
-        host = conf['host']
-        user = conf['user']
-        passwd = conf['pass']
-    else:
-        from getpass import getpass
-        host = input('Host:')
-        user = input('User:')
-        passwd = getpass('Password:')
-    pw = models.Paperwork(user, passwd, host)
+    pw = models.Paperwork(host)
     if not pw.authenticated:
         print('User/password not valid or host not reachable.')
         sys.exit()
