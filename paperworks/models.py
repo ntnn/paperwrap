@@ -409,7 +409,7 @@ class Attachment:
     def delete(self):
         """Deletes attachment on remote server."""
         self.note.api.delete_note_version_attachment(
-            self.note,
+            self.note.to_json(),
             self.version_id,
             self.id
             )
