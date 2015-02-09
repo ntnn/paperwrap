@@ -8,7 +8,6 @@ checks:
         variables_unpacking_non_sequence: true
         variables_undefined_variable: true
         variables_undefined_loop_variable: true
-        variables_redefined_outer_name: true
         variables_redefined_builtin: true
         format_bad_indentation:
             indentation: '4 spaces'
