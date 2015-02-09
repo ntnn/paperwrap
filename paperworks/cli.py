@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from . import models
-from .utils import *
+from paperworks import models
+from paperworks.utils import *
 import os
 import sys
 import logging
-import yaml
 import argparse
 import tempfile
 
@@ -14,20 +13,10 @@ if str(sys.version[0]) < '3':
 
 logger = logging.getLogger(__name__)
 
-pw = None
+pw = models.Paperwork(input('Host: '))
 
 att_note_sep = ' to '
 note_nb_sep = ' in '
-
-
-def login():
-    """Creates Paperwork instance.
-    Reads credentials from netrc or prompts."""
-    global pw
-    pw = models.Paperwork(host)
-    if not pw.authenticated:
-        print('User/password not valid or host not reachable.')
-        sys.exit()
 
 
 def download():
@@ -265,6 +254,10 @@ cmd_dict = {
 
 
 def main():
+    """Main function for terminal client.
+
+    Awaits user input and executes the functions.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v", "--verbose", help="verbose output", action="store_true")
@@ -276,11 +269,14 @@ def main():
         logging.basicConfig(level=logging.INFO)
     if args.threading:
         models.use_threading = True
-    login()
+
+    if not pw.authenticated:
+        print('User/password not valid or host not reachable.')
+        sys.exit()
     download()
 
     cmd = input('>')
-    while (cmd != 'exit'):
+    while cmd != 'exit':
         logger.info(cmd)
         if ' ' in cmd:
             cmd = cmd.split(' ', 1)
