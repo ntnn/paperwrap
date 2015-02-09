@@ -153,4 +153,4 @@ checks:
 
 filter:
     excluded_paths:
-        - tests/*
+        - test/*
