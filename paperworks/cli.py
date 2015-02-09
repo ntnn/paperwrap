@@ -212,6 +212,10 @@ def tagged(tag_title):
 
 
 def upload(args):
+    """Uploads a file as attacment to a note.
+
+    :type args: str
+    """
     filepath, note, notebook = split_args(args)
     notebook = fuzzy_find(notebook, PW.notebooks)
     note = fuzzy_find(note, notebook.notes)
