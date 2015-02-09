@@ -78,29 +78,26 @@ class api:
         :type keyword: str
         :rtype: dict or None
         """
-        try:
-            uri = self.host + api_version + api_path[keyword].format(*ids)
-            if data:
-                self.headers['Content-Type'] = 'application/json'
-                data = json.dumps(data)
-            logger.info(
-                '{} request to {}:\ndata: {}\nheaders: {}'.format(
-                    method, uri, data, self.headers))
-            res = requests.request(
-                method,
-                uri,
-                data=data,
-                headers=self.headers).text
-            if keyword == 'attachment_raw':
-                return res
-            json_res = json.loads(res)
-            if json_res['success'] is False:
-                logger.error('Unsuccessful request: {}'.format(
-                    json_res['errors']))
-            else:
-                return json_res['response']
-        except Exception as e:
-            logger.error(e)
+        uri = self.host + api_version + api_path[keyword].format(*ids)
+        if data:
+            self.headers['Content-Type'] = 'application/json'
+            data = json.dumps(data)
+        logger.info(
+            '{} request to {}:\ndata: {}\nheaders: {}'.format(
+                method, uri, data, self.headers))
+        res = requests.request(
+            method,
+            uri,
+            data=data,
+            headers=self.headers).text
+        if keyword == 'attachment_raw':
+            return res
+        json_res = json.loads(res)
+        if json_res['success'] is False:
+            logger.error('Unsuccessful request: {}'.format(
+                json_res['errors']))
+        else:
+            return json_res['response']
 
     def get(self, keyword, *ids):
         """Convenience wrapper for GET request.
@@ -384,8 +381,10 @@ class api:
             with open(path, 'wb') as f:
                 f.write(attachment)
             return True
-        except Exception as e:
+        except IOError as e:
             logger.error(e)
+        except:
+            logger.error('Unexpected exception occurred')
         return False
 
     def delete_note_attachment(self, note, attachment_id):
