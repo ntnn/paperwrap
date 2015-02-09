@@ -223,7 +223,8 @@ def upload(args):
 
 
 def print_help():
-    print("""The commands are self-explanatory. Notes, tags and notebooks are chosen through a fuzzy search.
+    print("""The commands are self-explanatory.
+Notes, tags and notebooksare chosen through a fuzzy search.
 
 update                                      Pushes local changes to the remote host
 ls                                          List notebooks and notes
@@ -242,21 +243,6 @@ tagged $tag                                 print notes tagged with $tag
 exit                                        exit application
 """
           )
-
-cmd_dict = {
-    'update': update,
-    'ls': print_all,
-    'edit': edit,
-    'delete': delete,
-    'move': move,
-    'create': create,
-    'tags': tags,
-    'tag': tag,
-    'tagged': tagged,
-    'help': print_help,
-    'upload': upload
-    }
-
 
 def main():
     """Main function for terminal client.
@@ -279,6 +265,20 @@ def main():
         print('User/password not valid or host not reachable.')
         sys.exit()
     download()
+
+    cmd_dict = {
+        'update': update,
+        'ls': print_all,
+        'edit': edit,
+        'delete': delete,
+        'move': move,
+        'create': create,
+        'tags': tags,
+        'tag': tag,
+        'tagged': tagged,
+        'help': print_help,
+        'upload': upload
+        }
 
     cmd = input('>')
     while cmd != 'exit':
