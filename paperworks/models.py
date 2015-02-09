@@ -21,58 +21,58 @@ def threaded_method(func):
 
 
 class Model:
-    def __init__(self, title, id, api):
+    def __init__(self, title, ident, api):
         """Model for paperwork-objects.
 
         :type title: str
-        :type id: integer
+        :type ident: integer
         :type api: wrapper.api
         """
-        self.id = int(id)
+        self.ident = int(ident)
         self.title = title
         self.api = api
 
     def __str__(self):
-        return "{}:'{}'".format(self.id, self.title)
+        return "{}:'{}'".format(self.ident, self.title)
 
     def to_json(self):
         """Returns model as dict."""
         return {
-            'id': self.id,
+            'id': self.ident,
             'title': self.title
             }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, api, json):
         """Creates model from json-dict.
 
         :param dict json: dictionary of json data
         """
         return cls(
             json['title'],
-            json['id']
-            )
+            json['id'],
+            api)
 
 
 class Notebook(Model):
-    def __init__(self, title, id, api, type=0, updated_at=''):
+    def __init__(self, title, ident, api, nb_type=0, updated_at=''):
         """Notebook paperwork-object.
 
         :type title: str
-        :type id: integer
+        :type ident: integer
         :type api: wrapper.api
         :type updated_at: str
         """
-        super().__init__(title, id, api)
-        self.type = type
+        super().__init__(title, ident, api)
+        self.nb_type = nb_type
         self.updated_at = updated_at
         self.notes = {}
 
     def to_json(self):
         """Returns notebook as dict."""
         return {
-            'type': self.type,
-            'id': self.id,
+            'type': self.nb_type,
+            'id': self.ident,
             'title': self.title
             }
 
@@ -87,7 +87,7 @@ class Notebook(Model):
             json['title'],
             json['id'],
             api,
-            type=json['type'],
+            nb_type=json['type'],
             updated_at='')
 
     @classmethod
@@ -104,7 +104,7 @@ class Notebook(Model):
     def delete(self):
         """Deletes notebook from remote host."""
         logger.info('Deleting notebook {}'.format(self))
-        self.api.delete_notebook(self.id)
+        self.api.delete_notebook(self.ident)
 
     @threaded_method
     def update(self, force=True):
@@ -114,10 +114,10 @@ class Notebook(Model):
                            regardless of timestamp.
         """
         logger.info('Updating {}'.format(self))
-        remote = self.api.get_notebook(self.id)
+        remote = self.api.get_notebook(self.ident)
         if remote is None:
             logger.error('Remote notebook could not be found.'
-                         'Wrong id or deleted.')
+                         'Wrong ident or deleted.')
         elif force or remote['updated_at'] < self.updated_at:
             self.updated_at = self.api.update_notebook(
                 self.to_json())['updated_at']
@@ -140,7 +140,7 @@ class Notebook(Model):
         :type title: str
         """
         note = Note.create(title, self)
-        self.notes[note.id] = note
+        self.notes[note.ident] = note
         logger.info('Created note {} in {}'.format(note, self))
 
     @threaded_method
@@ -148,7 +148,7 @@ class Notebook(Model):
         """Adds a note to the notebook.
 
         :type note: models.Note"""
-        self.notes[note.id] = note
+        self.notes[note.ident] = note
         logger.info('Added note {} to {}'.format(note, self))
 
     def download(self, tags):
@@ -156,7 +156,7 @@ class Notebook(Model):
 
         :param dict tags: Tags of the paperwork instance.
         """
-        notes_json = self.api.list_notebook_notes(self.id)
+        notes_json = self.api.list_notebook_notes(self.ident)
         logger.info('Downloading notes of notebook {}'.format(self))
         for note_json in notes_json:
             note = Note.from_json(note_json, self)
@@ -166,16 +166,16 @@ class Notebook(Model):
 
 
 class Note(Model):
-    def __init__(self, title, id, notebook, content='', updated_at=''):
+    def __init__(self, title, ident, notebook, content='', updated_at=''):
         """Note paperwork-object.
 
         :type title: str
-        :type id: int or str
+        :type ident: int or str
         :type notebook: Notebook
         :type content: str
         :type updated_at: str
         """
-        super().__init__(title, id, notebook.api)
+        super().__init__(title, ident, notebook.api)
         self.notebook = notebook
         self.content = content
         self.updated_at = updated_at
@@ -186,11 +186,11 @@ class Note(Model):
     def to_json(self):
         """Returns note as dict."""
         return {
-            'id': self.id,
+            'id': self.ident,
             'title': self.title,
             'content': self.content,
             'tags': [tag.to_json() for tag in self.tags],
-            'notebook_id': self.notebook.id
+            'notebook_id': self.notebook.ident
             }
 
     @classmethod
@@ -216,7 +216,7 @@ class Note(Model):
         :type notebook: Notebook
         """
         logger.info('Creating note {} in notebook'.format(title, notebook))
-        res = notebook.api.create_note(notebook.id, title)
+        res = notebook.api.create_note(notebook.ident, title)
         return cls(
             title,
             res['id'],
@@ -233,9 +233,9 @@ class Note(Model):
                            of timestamp.
         """
         logger.info('Updating note {}'.format(self))
-        remote = self.api.get_note(self.notebook.id, self.id)
+        remote = self.api.get_note(self.notebook.ident, self.ident)
         if remote is None:
-            logger.error('Remote note could not be found. Wrong id,'
+            logger.error('Remote note could not be found. Wrong ident,'
                          'deleted or moved to another notebook')
         elif force or remote['updated_at'] <= self.updated_at:
             logger.info('Remote version is lower or force update.'
@@ -253,8 +253,8 @@ class Note(Model):
         """Deletes note from remote host and notebook."""
         logger.info('Deleting note {} in notebook {}'.format(
             self, self.notebook))
-        if self.id in self.notebook.notes:
-            del(self.notebook.notes[self.id])
+        if self.ident in self.notebook.notes:
+            del(self.notebook.notes[self.ident])
         self.api.delete_note(self.to_json())
 
     @threaded_method
@@ -272,8 +272,8 @@ class Note(Model):
 
         :type new_notebook: Notebook
         """
-        self.api.move_note(self.to_json(), new_notebook.id)
-        del(self.notebook.notes[self.id])
+        self.api.move_note(self.to_json(), new_notebook.ident)
+        del(self.notebook.notes[self.ident])
         new_notebook.add_note(self)
 
     def list_versions(self):
@@ -282,7 +282,7 @@ class Note(Model):
         Also sets note.versions list in case of future reference.
         :rtype: list
         """
-        self.versions = [Version.from_json(version)
+        self.versions = [Version.from_json(self, version)
                          for version in self.api.list_note_versions(self)]
         return self.versions
 
@@ -306,12 +306,12 @@ class Note(Model):
 
 
 class Version:
-    def __init__(self, note, title, id, previous_id, next_id,
+    def __init__(self, note, title, ident, previous_id, next_id,
                  content, updated_at):
         """Class representing a version of a note.
 
         :type title: str
-        :param int or str id: ID of the version - not the note
+        :param int or str ident: ident of the version - not the note
         :type previous_id: int or str
         :type next_id: int or str
         :type content: str
@@ -320,7 +320,7 @@ class Version:
         """
         self.note = note
         self.title = title
-        self.id = int(id)
+        self.ident = int(ident)
         self.previous_id = int(previous_id)
         self.next_id = int(next_id)
         self.content = content
@@ -351,27 +351,27 @@ class Version:
         :rtype: list
         """
         self.attachments = [
-            Attachment.from_json(attachment, self.id)
+            Attachment.from_json(attachment, self.ident)
             for attachment in
-            self.note.api.list_note_version_attachments(self.note, self.id)]
+            self.note.api.list_note_version_attachments(self.note, self.ident)]
         return self.attachments
 
 
 class Attachment:
-    def __init__(self, note, title, id, version_id, mimetype,
+    def __init__(self, note, title, ident, version_id, mimetype,
                  updated_at):
         """Class representing an attachment of a note.
 
         :type note: models.Note
         :type filename: str
-        :type id: int or str
+        :type ident: int or str
         :type version_id: int or str
         :type mimetype: str
         :type updated_at: str
         """
         self.note = note
         self.title = title
-        self.id = int(id)
+        self.ident = int(ident)
         self.version_id = int(version_id)
         self.mimetype = mimetype
         self.updated_at = updated_at
@@ -398,7 +398,7 @@ class Attachment:
 
         :type path: str
         """
-        self.note.api.download_note_attachment(self.note, self.id, path)
+        self.note.api.download_note_attachment(self.note, self.ident, path)
 
     @threaded_method
     def delete(self):
@@ -406,29 +406,29 @@ class Attachment:
         self.note.api.delete_note_version_attachment(
             self.note.to_json(),
             self.version_id,
-            self.id
+            self.ident
             )
         if self in self.note.attachments:
             self.note.attachments.remove(self)
 
 
 class Tag(Model):
-    def __init__(self, title, id, api, visibility=0):
+    def __init__(self, title, ident, api, visibility=0):
         """Tag paperwork-object.
 
         :type title: str
-        :type id: int or str
+        :type ident: int or str
         :type api: wrapper.api
         :type visibility: int
         """
-        super().__init__(title, id, api)
+        super().__init__(title, ident, api)
         self.visibility = visibility
         self.notes = set()
 
     def to_json(self):
         """Returns tag as dict."""
         return {
-            'id': self.id,
+            'id': self.ident,
             'title': self.title,
             'visibility': self.visibility
             }
@@ -473,7 +473,7 @@ class Paperwork:
         """
         if title != 'All Notes':
             notebook = Notebook.create(self.api, title)
-            self.notebooks[notebook.id] = notebook
+            self.notebooks[notebook.ident] = notebook
             logger.info('Created notebook {}'.format(notebook))
             return notebook
 
@@ -484,7 +484,7 @@ class Paperwork:
         :type nb: Notebook
         """
         nb.delete()
-        del(self.notebooks[nb.id])
+        del(self.notebooks[nb.ident])
 
     @threaded_method
     def add_notebook(self, notebook):
@@ -492,8 +492,8 @@ class Paperwork:
 
         :type notebook: Notebook
         """
-        if notebook.id != 0:
-            self.notebooks[notebook.id] = notebook
+        if notebook.ident != 0:
+            self.notebooks[notebook.ident] = notebook
             logger.info('Added notebook {}'.format(notebook))
 
     @threaded_method
@@ -502,7 +502,7 @@ class Paperwork:
 
         :type tag: Tag
         """
-        self.tags[tag.id] = tag
+        self.tags[tag.ident] = tag
         logger.info('Added tag {}'.format(tag))
 
     def download(self):
@@ -512,7 +512,7 @@ class Paperwork:
         logger.info('Downloading tags')
         for tag in self.api.list_tags():
             tag = Tag.from_json(tag, self.api)
-            self.tags[tag.id] = tag
+            self.tags[tag.ident] = tag
 
         logger.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
@@ -533,7 +533,7 @@ class Paperwork:
                 note.update()
 
     def find_tag(self, key):
-        """Finds tag with key (id or title).
+        """Finds tag with key (ident or title).
 
         :type key: str or int
         :rtype: Tag or None
@@ -541,7 +541,7 @@ class Paperwork:
         return find(key, self.tags)
 
     def find_notebook(self, key):
-        """Find notebook with key (id or title).
+        """Find notebook with key (ident or title).
 
         :type key: str or int
         :rtype: Notebook or None
@@ -549,7 +549,7 @@ class Paperwork:
         return find(key, self.notebooks)
 
     def find_note(self, key):
-        """Find note with key (id or title).
+        """Find note with key (ident or title).
 
         :type key: str or int
         :rtype: Note or None
