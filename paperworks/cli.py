@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from paperworks import models
+from . import models
+from .utils import *
 import os
 import sys
 import logging
@@ -84,11 +85,11 @@ def split_and_search_args(args):
     :rtype: list
     """
     attachment, note, notebook = split_args(args)
-    notebook = pw.fuzzy_find(notebook, pw.notebooks)
+    notebook = fuzzy_find(notebook, pw.notebooks)
     if note:
-        note = pw.fuzzy_find(note, notebook.notes)
+        note = fuzzy_find(note, notebook.notes)
     if attachment:
-        attachment = pw.fuzzy_find(attachment, note.attachments)
+        attachment = fuzzy_find(attachment, note.attachments)
     return attachment, note, notebook
 
 
@@ -165,7 +166,7 @@ def move(args):
     # splits off the new notebook at the end first, so it
     # doesn't mess with the split_args function
     args, notebook = split(args, ' to ')
-    notebook = pw.fuzzy_find(notebook, pw.notebooks)
+    notebook = fuzzy_find(notebook, pw.notebooks)
     note = split_and_search_args(args)[1]
     if prompt('Move note {} to {}?'.format(note.title, notebook.title)):
         note.move_to(notebook)
@@ -178,7 +179,7 @@ def create(args):
     """
     if note_nb_sep in args:
         note, notebook = split_args(args)[1:]
-        notebook = pw.fuzzy_find(notebook, pw.notebooks)
+        notebook = fuzzy_find(notebook, pw.notebooks)
         if prompt('Create note {} in {}?'.format(note, notebook.title)):
             notebook.create_note(note)
     else:
@@ -200,7 +201,7 @@ def tag(args):
     if ' with ' in args:
         # Again, split tag before
         args, tag = split(args, ' with ')
-        tag = pw.fuzzy_find(tag, pw.tags)
+        tag = fuzzy_find(tag, pw.tags)
         note = split_and_search_args(args)[1]
         if prompt('Tag note {} with {}?'.format(note.title, tag.title)):
             note.add_tag(tag)
@@ -214,7 +215,7 @@ def tagged(tag_title):
 
     :type tag_title: str
     """
-    tag = pw.fuzzy_find(tag_title, pw.tags)
+    tag = fuzzy_find(tag_title, pw.tags)
     print('Notes tagged with {}'.format(tag.title))
     for note in tag.notes:
         print(note.title)
@@ -222,8 +223,8 @@ def tagged(tag_title):
 
 def upload(args):
     filepath, note, notebook = split_args(args)
-    notebook = pw.fuzzy_find(notebook, pw.notebooks)
-    note = pw.fuzzy_find(note, notebook.notes)
+    notebook = fuzzy_find(notebook, pw.notebooks)
+    note = fuzzy_find(note, notebook.notes)
     note.upload_file(filepath)
 
 
