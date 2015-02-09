@@ -32,9 +32,9 @@ def update():
 
 def print_all():
     """Prints notebook and notes in alphabetical order."""
-    for nb in PW.get_notebooks():
-        print(nb.title)
-        for note in nb.get_notes():
+    for notebook in PW.get_notebooks():
+        print(notebook.title)
+        for note in notebook.get_notes():
             print("- {}".format(note.title))
             for attachment in note.attachments:
                 print("-- {}".format(attachment.title))
@@ -223,6 +223,7 @@ def upload(args):
 
 
 def print_help():
+    """Prints commands and their usage to terminal."""
     print("""The commands are self-explanatory.
 Notes, tags and notebooksare chosen through a fuzzy search.
 

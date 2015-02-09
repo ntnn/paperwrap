@@ -1,11 +1,12 @@
+"""Models representing objects in paperwork."""
 from . import wrapper
-from .utils import *
+from .utils import find
 import logging
 from threading import Thread
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-use_threading = False
+USE_THREADING = False
 
 
 def threaded_method(func):
@@ -13,7 +14,8 @@ def threaded_method(func):
     if threading is enabled.
     """
     def run(*args, **kwargs):
-        if use_threading:
+        """Runs the function in background, if USE_THREADING is true."""
+        if USE_THREADING:
             Thread(target=func, args=args, kwargs=kwargs).start()
         else:
             func(*args, **kwargs)
@@ -21,8 +23,9 @@ def threaded_method(func):
 
 
 class Model:
+    """General class for paperwork-objects."""
     def __init__(self, title, ident, api):
-        """Model for paperwork-objects.
+        """Initializes paperwork-objects.
 
         :type title: str
         :type ident: integer
@@ -55,8 +58,9 @@ class Model:
 
 
 class Notebook(Model):
+    """Class representing a notebook."""
     def __init__(self, title, ident, api, nb_type=0, updated_at=''):
-        """Notebook paperwork-object.
+        """Initializes a notebook object.
 
         :type title: str
         :type ident: integer
@@ -97,13 +101,13 @@ class Notebook(Model):
         :param wrapper.api api: api-instance
         :type title: str
         """
-        logger.info('Created notebook {}'.format(title))
+        LOGGER.info('Created notebook {}'.format(title))
         return cls.from_json(api.create_notebook(title), api)
 
     @threaded_method
     def delete(self):
         """Deletes notebook from remote host."""
-        logger.info('Deleting notebook {}'.format(self))
+        LOGGER.info('Deleting notebook {}'.format(self))
         self.api.delete_notebook(self.ident)
 
     @threaded_method
@@ -113,16 +117,16 @@ class Notebook(Model):
         :param bool force: If true the local title is pushed,
                            regardless of timestamp.
         """
-        logger.info('Updating {}'.format(self))
+        LOGGER.info('Updating {}'.format(self))
         remote = self.api.get_notebook(self.ident)
         if remote is None:
-            logger.error('Remote notebook could not be found.'
+            LOGGER.error('Remote notebook could not be found.'
                          'Wrong ident or deleted.')
         elif force or remote['updated_at'] < self.updated_at:
             self.updated_at = self.api.update_notebook(
                 self.to_json())['updated_at']
         else:
-            logger.info('Remote version is higher.'
+            LOGGER.info('Remote version is higher.'
                         'Updating local notebook.')
             self.title = remote['title']
             self.updated_at = remote['updated_at']
@@ -141,7 +145,7 @@ class Notebook(Model):
         """
         note = Note.create(title, self)
         self.notes[note.ident] = note
-        logger.info('Created note {} in {}'.format(note, self))
+        LOGGER.info('Created note {} in {}'.format(note, self))
 
     @threaded_method
     def add_note(self, note):
@@ -149,7 +153,7 @@ class Notebook(Model):
 
         :type note: models.Note"""
         self.notes[note.ident] = note
-        logger.info('Added note {} to {}'.format(note, self))
+        LOGGER.info('Added note {} to {}'.format(note, self))
 
     def download(self, tags):
         """Downloads notes.
@@ -157,7 +161,7 @@ class Notebook(Model):
         :param dict tags: Tags of the paperwork instance.
         """
         notes_json = self.api.list_notebook_notes(self.ident)
-        logger.info('Downloading notes of notebook {}'.format(self))
+        LOGGER.info('Downloading notes of notebook {}'.format(self))
         for note_json in notes_json:
             note = Note.from_json(note_json, self)
             self.add_note(note)
@@ -166,8 +170,9 @@ class Notebook(Model):
 
 
 class Note(Model):
+    """Class repesenting a note object."""
     def __init__(self, title, ident, notebook, content='', updated_at=''):
-        """Note paperwork-object.
+        """Initializes a note object.
 
         :type title: str
         :type ident: int or str
@@ -215,7 +220,7 @@ class Note(Model):
         :type title: str
         :type notebook: Notebook
         """
-        logger.info('Creating note {} in notebook'.format(title, notebook))
+        LOGGER.info('Creating note {} in notebook {}'.format(title, notebook))
         res = notebook.api.create_note(notebook.ident, title)
         return cls(
             title,
@@ -232,18 +237,18 @@ class Note(Model):
         :param bool force: If true local values will be pushed regardless
                            of timestamp.
         """
-        logger.info('Updating note {}'.format(self))
+        LOGGER.info('Updating note {}'.format(self))
         remote = self.api.get_note(self.notebook.ident, self.ident)
         if remote is None:
-            logger.error('Remote note could not be found. Wrong ident,'
+            LOGGER.error('Remote note could not be found. Wrong ident,'
                          'deleted or moved to another notebook')
         elif force or remote['updated_at'] <= self.updated_at:
-            logger.info('Remote version is lower or force update.'
+            LOGGER.info('Remote version is lower or force update.'
                         'Updating remote note.')
             self.updated_at = self.api.update_note(
                 self.to_json())['updated_at']
         else:
-            logger.info('Remote version is higher. Updating local note.')
+            LOGGER.info('Remote version is higher. Updating local note.')
             self.title = remote['title']
             self.content = remote['content']
             self.updated_at = remote['updated_at']
@@ -251,7 +256,7 @@ class Note(Model):
     @threaded_method
     def delete(self):
         """Deletes note from remote host and notebook."""
-        logger.info('Deleting note {} in notebook {}'.format(
+        LOGGER.info('Deleting note {} in notebook {}'.format(
             self, self.notebook))
         if self.ident in self.notebook.notes:
             del(self.notebook.notes[self.ident])
@@ -263,7 +268,7 @@ class Note(Model):
 
         :type tags: list or set"""
         for tag in tags:
-            logger.info('Adding tag {} to note {}'.format(tag, self))
+            LOGGER.info('Adding tag {} to note {}'.format(tag, self))
             self.tags.add(tag)
 
     @threaded_method
@@ -306,9 +311,10 @@ class Note(Model):
 
 
 class Version:
+    """Class repesenting a version of a note."""
     def __init__(self, note, title, ident, previous_id, next_id,
                  content, updated_at):
-        """Class representing a version of a note.
+        """Initializes a version object.
 
         :type title: str
         :param int or str ident: ident of the version - not the note
@@ -358,9 +364,10 @@ class Version:
 
 
 class Attachment:
+    """Class repesenting an attachment to a note."""
     def __init__(self, note, title, ident, version_id, mimetype,
                  updated_at):
-        """Class representing an attachment of a note.
+        """Initializes an attachment object.
 
         :type note: models.Note
         :type filename: str
@@ -413,8 +420,9 @@ class Attachment:
 
 
 class Tag(Model):
+    """Class repesenting a tag."""
     def __init__(self, title, ident, api, visibility=0):
-        """Tag paperwork-object.
+        """Initializes a tag object.
 
         :type title: str
         :type ident: int or str
@@ -455,14 +463,15 @@ class Tag(Model):
 
 
 class Paperwork:
+    """Class repesenting the remote paperwork instance."""
     def __init__(self, host):
-        """Paperwork object.
+        """Initializes local paperwork instance and the api-wrapper.
 
         :type host: str
         """
         self.notebooks = {}
         self.tags = {}
-        self.api = wrapper.api(host)
+        self.api = wrapper.API(host)
         self.authenticated = self.api.test_connection()
 
     def create_notebook(self, title):
@@ -474,17 +483,17 @@ class Paperwork:
         if title != 'All Notes':
             notebook = Notebook.create(self.api, title)
             self.notebooks[notebook.ident] = notebook
-            logger.info('Created notebook {}'.format(notebook))
+            LOGGER.info('Created notebook {}'.format(notebook))
             return notebook
 
     @threaded_method
-    def delete_notebook(self, nb):
+    def delete_notebook(self, notebook):
         """Deletes notebook from server and instance.
 
-        :type nb: Notebook
+        :type notebook: Notebook
         """
-        nb.delete()
-        del(self.notebooks[nb.ident])
+        notebook.delete()
+        del(self.notebooks[notebook.ident])
 
     @threaded_method
     def add_notebook(self, notebook):
@@ -494,7 +503,7 @@ class Paperwork:
         """
         if notebook.ident != 0:
             self.notebooks[notebook.ident] = notebook
-            logger.info('Added notebook {}'.format(notebook))
+            LOGGER.info('Added notebook {}'.format(notebook))
 
     @threaded_method
     def add_tag(self, tag):
@@ -503,33 +512,33 @@ class Paperwork:
         :type tag: Tag
         """
         self.tags[tag.ident] = tag
-        logger.info('Added tag {}'.format(tag))
+        LOGGER.info('Added tag {}'.format(tag))
 
     def download(self):
         """Downloading tags, notebooks and notes from host."""
-        logger.info('Downloading all')
+        LOGGER.info('Downloading all')
 
-        logger.info('Downloading tags')
+        LOGGER.info('Downloading tags')
         for tag in self.api.list_tags():
             tag = Tag.from_json(tag, self.api)
             self.tags[tag.ident] = tag
 
-        logger.info('Downloading notebooks')
+        LOGGER.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
             if notebook['title'] != 'All Notes':
                 notebook = Notebook.from_json(notebook, self.api)
                 self.add_notebook(notebook)
                 notebook.download(self.tags)
             else:
-                logger.info('Skipping notebook {}'.format(notebook))
+                LOGGER.info('Skipping notebook {}'.format(notebook))
 
     @threaded_method
     def update(self):
         """Updating notebooks and notes to host."""
-        logger.info('Updating notebooks and notes')
-        for nb in self.notebooks.values():
-            nb.update()
-            for note in nb.get_notes():
+        LOGGER.info('Updating notebooks and notes')
+        for notebook in self.notebooks.values():
+            notebook.update()
+            for note in notebook.get_notes():
                 note.update()
 
     def find_tag(self, key):
@@ -554,18 +563,18 @@ class Paperwork:
         :type key: str or int
         :rtype: Note or None
         """
-        logger.info('Searching note for key {} of type {}'.format(
+        LOGGER.info('Searching note for key {} of type {}'.format(
             key, type(key)))
         if isinstance(key, basestring):
             for item in self.get_notes():
                 if key == item.title:
                     return item
         else:
-            logger.info('key is int, finding through keys')
-            for nb in self.notebooks.values():
-                if key in nb.notes:
-                    return nb.notes[key]
-        logger.error('No note found for key {} of type {}'.format(
+            LOGGER.info('key is int, finding through keys')
+            for notebook in self.notebooks.values():
+                if key in notebook.notes:
+                    return notebook.notes[key]
+        LOGGER.error('No note found for key {} of type {}'.format(
             key, type(key)))
 
     def search(self, key):

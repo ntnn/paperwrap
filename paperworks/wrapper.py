@@ -1,18 +1,21 @@
-# License: MIT
-# Author: Nelo Wallus, http://github.com/ntnn
+"""Wrapper for paperwork API.
+
+License: MIT
+Author: Nelo Wallus, http://github.com/ntnn
+"""
 
 import logging
 import json
 import requests
 from base64 import b64encode
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 __version__ = '0.14.1'
-api_version = '/api/v1/'
-default_agent = 'paperwork.py api wrapper v{}'.format(__version__)
+API_VERSION = '/api/v1/'
+DEFAULT_AGENT = 'paperwork.py api wrapper v{}'.format(__version__)
 
-api_path = {
+API_PATH = {
     'notebooks':      'notebooks',
     'notebook':       'notebooks/{}',
     'notes':          'notebooks/{}/notes',
@@ -50,8 +53,9 @@ def concatenate_ids(coll):
     return ','.join([str(item['id']) for item in coll])
 
 
-class api:
-    def __init__(self, host, user_agent=default_agent):
+class API:
+    """Class representing the api-wraper."""
+    def __init__(self, host, user_agent=DEFAULT_AGENT):
         """Api instance.
 
         :type host: str
@@ -78,11 +82,11 @@ class api:
         :type keyword: str
         :rtype: dict or None
         """
-        uri = self.host + api_version + api_path[keyword].format(*ids)
+        uri = self.host + API_VERSION + API_PATH[keyword].format(*ids)
         if data:
             self.headers['Content-Type'] = 'application/json'
             data = json.dumps(data)
-        logger.info(
+        LOGGER.info(
             '{} request to {}:\ndata: {}\nheaders: {}'.format(
                 method, uri, data, self.headers))
         res = requests.request(
@@ -94,7 +98,7 @@ class api:
             return res
         json_res = json.loads(res)
         if json_res['success'] is False:
-            logger.error('Unsuccessful request: {}'.format(
+            LOGGER.error('Unsuccessful request: {}'.format(
                 json_res['errors']))
         else:
             return json_res['response']
@@ -381,10 +385,8 @@ class api:
             with open(path, 'wb') as f:
                 f.write(attachment)
             return True
-        except IOError as e:
-            logger.error(e)
-        except:
-            logger.error('Unexpected exception occurred')
+        except IOError as ioerror:
+            LOGGER.error(ioerror)
         return False
 
     def delete_note_attachment(self, note, attachment_id):
@@ -418,9 +420,9 @@ class api:
         :type path: str
         :rtype: dict
         """
-        logger.info('Uploading file at {} to {}'.format(path, note))
+        LOGGER.info('Uploading file at {} to {}'.format(path, note))
         return requests.post(
-            self.host + api_version + api_path['attachments'].format(
+            self.host + API_VERSION + API_PATH['attachments'].format(
                 note['notebook_id'],
                 note['id'],
                 0
