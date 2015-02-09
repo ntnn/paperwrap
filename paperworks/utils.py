@@ -11,7 +11,7 @@ except NameError:
 logger = logging.getLogger(__name__)
 
 
-def fuzzy_find(self, title, choices):
+def fuzzy_find(title, choices):
     """Fuzzy find for title in choices. Returns highest match.
 
     :type title: str
@@ -29,7 +29,7 @@ def fuzzy_find(self, title, choices):
     return top_choice[1]
 
 
-def find(self, key, coll):
+def find(key, coll):
     """Finds key in given dict.
 
     :type key: str or int
