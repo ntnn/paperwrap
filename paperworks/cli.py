@@ -194,7 +194,7 @@ def tag(args):
         tag = fuzzy_find(tag, PW.tags)
         note = split_and_search_args(args)[1]
         if prompt('Tag note {} with {}?'.format(note.title, tag.title)):
-            note.add_tag(tag)
+            note.add_tags([tag])
     else:
         if prompt('Create tag {}?'.format(args)):
             PW.add_tag(args)
