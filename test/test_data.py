@@ -31,22 +31,6 @@ versions = [
     version2
     ]
 
-attachment_id = 55
-attachment2_id = 56
-attachment_file = 'attached.pdf'
-attachment = {
-    'id': attachment_id,
-    'file': attachment_file
-    }
-attachment2 = {
-    'id': attachment2_id,
-    'file': attachment_file
-    }
-attachments = [
-    attachment,
-    attachment2
-    ]
-
 tag_id = 42
 tag2_id = 43
 tag_title = 'some_tag'
@@ -72,6 +56,29 @@ note_id = 4
 note2_id = 5
 note_updated_at = '2014-09-20 19:43:59'
 note2_updated_at = '2014-09-19 19:43:59'
+
+attachment_id = 55
+attachment2_id = 56
+attachment_file = 'attached.pdf'
+attachment_mime = 'test/data'
+attachment = {
+    'id': attachment_id,
+    'filename': attachment_file,
+    'pivot': {'version_id': note_id},
+    'mimetype': attachment_mime,
+    'updated_at': note_updated_at
+    }
+attachment2 = {
+    'id': attachment2_id,
+    'filename': attachment_file,
+    'pivot': {'version_id': note2_id},
+    'mimetype': attachment_mime,
+    'updated_at': note_updated_at
+    }
+attachments = [
+    attachment,
+    attachment2
+    ]
 
 note = {
     'id': note_id,
@@ -103,9 +110,6 @@ notes = [
     note,
     note2
     ]
-
-keyword = 'test keyword'
-keyword_b64 = 'dGVzdCBrZXl3b3Jk'
 
 user = 'testuser'
 passwd = 'testpassword'
@@ -144,6 +148,9 @@ i18n = {
 i18nkey = {
     'giant': 'dict'
     }
+
+keyword = 'test keyword'
+keyword_b64 = 'dGVzdCBrZXl3b3Jk'
 
 ret = {
     'notebooks':   notebooks,

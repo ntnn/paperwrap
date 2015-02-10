@@ -3,7 +3,6 @@
 import unittest
 from paperworks import wrapper
 from json import dumps
-import tempfile
 from test_data import *
 
 try:
@@ -12,7 +11,7 @@ except ImportError:
     from mock import patch
 
 
-class TestRequests(unittest.TestCase):
+class TestAPI(unittest.TestCase):
     def setUp(self):
         self.patcher = patch('paperworks.wrapper.requests.request')
         self.mocked_request = self.patcher.start()
@@ -22,8 +21,7 @@ class TestRequests(unittest.TestCase):
             }))
         self.mocked_request.return_value = temp
         self.mocked_request.return_value = temp
-        self.api = wrapper.api(agent)
-        self.api.basic_authentication(uri, user, passwd)
+        self.api = wrapper.API(uri, agent)
 
     def tearDown(self):
         self.patcher.stop()
@@ -34,7 +32,6 @@ class TestRequests(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.api.host, uri_correct)
         self.assertEqual(self.api.headers['User-Agent'], agent)
-        self.assertEqual(self.api.headers['Authorization'], 'Basic ' + upasswd)
 
     def request(self, function, keyword, *args):
         temp = ResponseObj(dumps({
@@ -79,7 +76,7 @@ class TestRequests(unittest.TestCase):
     def test_update_note(self):
         self.request(self.api.update_note, 'note', note)
 
-    @patch('paperworks.wrapper.api.delete_notes')
+    @patch('paperworks.wrapper.API.delete_notes')
     def test_delete_note(self, mocked_delete_notes):
         self.api.delete_note(note)
         mocked_delete_notes.assert_called_with([note])
@@ -87,7 +84,7 @@ class TestRequests(unittest.TestCase):
     def test_delete_notes(self):
         self.request(self.api.delete_notes, 'notes', notes)
 
-    @patch('paperworks.wrapper.api.move_notes')
+    @patch('paperworks.wrapper.API.move_notes')
     def test_move_note(self, mocked_move_notes):
         self.api.move_note(note, new_notebook_id)
         mocked_move_notes.assert_called_with([note], new_notebook_id)
@@ -138,5 +135,3 @@ class TestRequests(unittest.TestCase):
 
     def test_i18n_param(self):
         self.request(self.api.i18n, 'i18nkey', keyword)
-
-
