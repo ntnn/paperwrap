@@ -81,7 +81,7 @@ class Notebook(Model):
             }
 
     @classmethod
-    def from_json(cls, json, api):
+    def from_json(cls, api, json):
         """Creates Notebook-instance from json-dict.
 
         :param dict json: dictionary of json data
@@ -102,7 +102,7 @@ class Notebook(Model):
         :type title: str
         """
         LOGGER.info('Created notebook {}'.format(title))
-        return cls.from_json(api.create_notebook(title), api)
+        return cls.from_json(api, api.create_notebook(title))
 
     @threaded_method
     def delete(self):
@@ -163,7 +163,7 @@ class Notebook(Model):
         notes_json = self.api.list_notebook_notes(self.ident)
         LOGGER.info('Downloading notes of notebook {}'.format(self))
         for note_json in notes_json:
-            note = Note.from_json(note_json, self)
+            note = Note.from_json(self, note_json)
             self.add_note(note)
             note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
             note.list_attachments()
@@ -199,7 +199,7 @@ class Note(Model):
             }
 
     @classmethod
-    def from_json(cls, json, notebook):
+    def from_json(cls, notebook, json):
         """Creates note from dict.
 
         :type json: dict
@@ -442,7 +442,7 @@ class Tag(Model):
             }
 
     @classmethod
-    def from_json(cls, json, api):
+    def from_json(cls, api, json):
         """Creates tag from dict.
 
         :type json: dict
@@ -520,13 +520,13 @@ class Paperwork:
 
         LOGGER.info('Downloading tags')
         for tag in self.api.list_tags():
-            tag = Tag.from_json(tag, self.api)
+            tag = Tag.from_json(self.api, tag)
             self.tags[tag.ident] = tag
 
         LOGGER.info('Downloading notebooks')
         for notebook in self.api.list_notebooks():
             if notebook['title'] != 'All Notes':
-                notebook = Notebook.from_json(notebook, self.api)
+                notebook = Notebook.from_json(self.api, notebook)
                 self.add_notebook(notebook)
                 notebook.download(self.tags)
             else:

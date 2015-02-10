@@ -44,20 +44,20 @@ class TestPaperwork(unittest.TestCase):
     @patch('paperworks.models.Note.update')
     @patch('paperworks.models.Notebook.update')
     def test_update(self, mocked_update_notebook, mocked_update_note):
-        parsed_notebook = models.Notebook.from_json(notebook, self.api)
+        parsed_notebook = models.Notebook.from_json(self.api, notebook)
         self.pw.add_notebook(parsed_notebook)
-        self.pw.add_tag(models.Tag.from_json(tag, self.api))
-        parsed_notebook.add_note(models.Note.from_json(note, parsed_notebook))
+        self.pw.add_tag(models.Tag.from_json(self.api, tag))
+        parsed_notebook.add_note(models.Note.from_json(parsed_notebook, note))
         self.pw.update()
         self.assertTrue(mocked_update_note.called)
         self.assertTrue(mocked_update_notebook.called)
 
     def test_get_notes(self):
-        nb = models.Notebook.from_json(notebook, self.api)
-        nb2 = models.Notebook.from_json(notebook2, self.api)
-        n = models.Note.from_json(note, nb)
+        nb = models.Notebook.from_json(self.api, notebook)
+        nb2 = models.Notebook.from_json(self.api, notebook2)
+        n = models.Note.from_json(nb, note)
         nb.add_note(n)
-        n2 = models.Note.from_json(note2, nb2)
+        n2 = models.Note.from_json(nb2, note2)
         nb2.add_note(n2)
         self.pw.add_notebook(nb)
         self.pw.add_notebook(nb2)
@@ -96,7 +96,7 @@ class TestNotebook(TestModel):
             notebook_title,
             notebook_id,
             self.api)
-        self.note = models.Note.from_json(note, self.nb)
+        self.note = models.Note.from_json(self.nb, note)
 
     def test_to_json(self):
         self.to_json_test(
@@ -105,7 +105,7 @@ class TestNotebook(TestModel):
             notebook_id)
 
     def test_from_json(self):
-        parsed_notebook = models.Notebook.from_json(notebook, self.api)
+        parsed_notebook = models.Notebook.from_json(self.api, notebook)
         self.from_json_test(parsed_notebook, notebook_title, notebook_id)
 
     @patch('paperworks.wrapper.API.create_notebook')
@@ -148,26 +148,26 @@ class TestNotebook(TestModel):
     @patch('paperworks.wrapper.API.list_notebook_notes')
     def test_download(self, mocked_list_notebook_notes):
         mocked_list_notebook_notes.return_value = []
-        self.nb.download([models.Tag.from_json(tag, self.api)])
+        self.nb.download([models.Tag.from_json(self.api, tag)])
         self.assertTrue(mocked_list_notebook_notes.called)
 
 
 class TestNote(TestModel):
     def setUp(self):
         super().setUp()
-        self.notebook = models.Notebook.from_json(notebook, self.api)
+        self.notebook = models.Notebook.from_json(self.api, notebook)
         self.new_note = models.Note(note_title, note_id, self.notebook)
         self.old_note = models.Note(
             note_title,
             note_id,
             self.notebook,
             content)
-        self.parsed_note = models.Note.from_json(note, self.notebook)
+        self.parsed_note = models.Note.from_json(self.notebook, note)
         self.notebook.add_note(self.parsed_note)
         self.parsed_note_json = self.parsed_note.to_json()
 
     def test_to_json(self):
-        self.old_note.add_tags([models.Tag.from_json(tag, self.api)])
+        self.old_note.add_tags([models.Tag.from_json(self.api, tag)])
         self.notebook.add_note(self.old_note)
         json_note = self.old_note.to_json()
         self.assertEqual(json_note['content'], content)
@@ -187,7 +187,7 @@ class TestNote(TestModel):
     def test_move_to(self, mocked_move):
         self.parsed_note.move_to(
             models.Notebook.from_json(
-                notebook2, self.api))
+                self.api, notebook2))
         mocked_move.assert_called_with(self.parsed_note_json, notebook2_id)
 
     @patch('paperworks.wrapper.API.delete_note')
@@ -231,7 +231,7 @@ class TestTag(TestModel):
                           tag_title, tag_id)
 
     def test_from_json(self):
-        self.tag = models.Tag.from_json(tag, self.api)
+        self.tag = models.Tag.from_json(self.api, tag)
         self.assertEqual(tag['id'], self.tag.ident)
         self.assertEqual(tag['title'], self.tag.title)
         self.assertEqual(tag['visibility'], self.tag.visibility)
