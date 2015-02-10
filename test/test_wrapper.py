@@ -112,11 +112,19 @@ class TestAPI(unittest.TestCase):
         self.request(self.api.delete_note_attachment, 'attachment', note,
                      attachment_id)
 
-    # TODO (Nelo Wallus): Fix actual method
-    @unittest.expectedFailure
-    def test_upload_attachment(self):
-        self.request(self.api.upload_attachment, 'attachments', note,
-                     attachment)
+    @patch('paperworks.wrapper.requests.post')
+    @patch('builtins.open', lambda path, mode: path)
+    def test_upload_attachment(self, mocked_post):
+        self.api.upload_attachment(note, 'some/path/')
+        mocked_post.assert_called_with(
+            self.api.host + wrapper.API_VERSION +
+            wrapper.API_PATH['attachments'].format(
+                note['notebook_id'],
+                note['id'],
+                0),
+            files={'file': 'some/path/'},
+            headers=self.api.headers
+            )
 
     def test_list_tags(self):
         self.request(self.api.list_tags, 'tags')
