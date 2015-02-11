@@ -166,6 +166,7 @@ class Notebook(Model):
             note = Note.from_json(self, note_json)
             self.add_note(note)
             note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
+            note.list_versions()
             note.list_attachments()
 
 
@@ -266,7 +267,8 @@ class Note(Model):
     def add_tags(self, tags):
         """Adds a collection of tags to the note.
 
-        :type tags: list or set"""
+        :type tags: list or set
+        """
         for tag in tags:
             LOGGER.info('Adding tag {} to note {}'.format(tag, self))
             self.tags.add(tag)
@@ -302,6 +304,7 @@ class Note(Model):
             for attachment in self.api.list_note_attachments(self.to_json())]
         return self.attachments
 
+    @threaded_method
     def upload_file(self, path):
         """Uploads file at path as attachment.
 
@@ -310,12 +313,13 @@ class Note(Model):
         self.api.upload_attachment(self.to_json(), path)
 
 
-class Version:
+class Version(Model):
     """Class representing a version of a note."""
     def __init__(self, note, title, ident, previous_id, next_id,
                  content, updated_at):
         """Initializes a version object.
 
+        :type note: Note
         :type title: str
         :param int or str ident: ident of the version - not the note
         :type previous_id: int or str
@@ -324,9 +328,8 @@ class Version:
         :param str updated_at: Timestamp of the last update.
             Same as the creation date of the next version.
         """
+        super().__init__(title, ident, note.api)
         self.note = note
-        self.title = title
-        self.ident = int(ident)
         self.previous_id = int(previous_id)
         self.next_id = int(next_id)
         self.content = content
@@ -359,13 +362,15 @@ class Version:
         self.attachments = [
             Attachment.from_json(attachment, self.ident)
             for attachment in
-            self.note.api.list_note_version_attachments(self.note, self.ident)]
+            self.api.list_note_version_attachments(
+                self.note.to_json(),
+                self.ident)]
         return self.attachments
 
 
-class Attachment:
+class Attachment(Model):
     """Class representing an attachment to a note."""
-    def __init__(self, note, title, ident, version_id, mimetype,
+    def __init__(self, note, filename, ident, version_id, mimetype,
                  updated_at):
         """Initializes an attachment object.
 
@@ -376,9 +381,8 @@ class Attachment:
         :type mimetype: str
         :type updated_at: str
         """
+        super().__init__(filename, ident, note.api)
         self.note = note
-        self.title = title
-        self.ident = int(ident)
         self.version_id = int(version_id)
         self.mimetype = mimetype
         self.updated_at = updated_at
@@ -405,12 +409,12 @@ class Attachment:
 
         :type path: str
         """
-        self.note.api.download_note_attachment(self.note, self.ident, path)
+        self.api.download_note_attachment(self.note, self.ident, path)
 
     @threaded_method
     def delete(self):
         """Deletes attachment on remote server."""
-        self.note.api.delete_note_version_attachment(
+        self.api.delete_note_version_attachment(
             self.note.to_json(),
             self.version_id,
             self.ident
