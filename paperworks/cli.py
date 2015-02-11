@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
 """Terminal client for paperwork.py/paperworks"""
 
-from paperworks import models
-from paperworks.utils import fuzzy_find
+from . import models
+from .utils import fuzzy_find
 import os
 import sys
 import logging

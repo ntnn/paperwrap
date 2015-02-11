@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
-from test_data import *
-from paperworks.models import Notebook, Note, Tag, Attachment
+from .test_data import *
+from ..paperworks.models import Notebook, Note, Tag, Attachment
 try:
     from unittest.mock import patch
 except ImportError:
@@ -29,7 +29,6 @@ class TestCli(unittest.TestCase):
             tag['id']: Tag.from_json(cli.PW.api, tag)
             for tag in tags
             }
-
 
     def tearDown(self):
         pass
@@ -157,17 +156,5 @@ class TestCli(unittest.TestCase):
         self.assertTrue(mocked_upload.called_with('testfile'))
 
 
-
 if __name__ == "__main__":
     unittest.main()
-
-
-
-
-
-
-
-
-
-
-

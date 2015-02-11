@@ -1,7 +1,7 @@
 import unittest
 from json import dumps
-from paperworks import models
-from test_data import *
+from ..paperworks import models
+from .test_data import *
 
 try:
     from unittest.mock import patch
