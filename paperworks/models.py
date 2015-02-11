@@ -289,8 +289,9 @@ class Note(Model):
         Also sets note.versions list in case of future reference.
         :rtype: list
         """
-        self.versions = [Version.from_json(self, version)
-                         for version in self.api.list_note_versions(self)]
+        self.versions = [
+            Version.from_json(self, version)
+            for version in self.api.list_note_versions(self.to_json())]
         return self.versions
 
     def list_attachments(self):
@@ -330,8 +331,8 @@ class Version(Model):
         """
         super().__init__(title, ident, note.api)
         self.note = note
-        self.previous_id = int(previous_id)
-        self.next_id = int(next_id)
+        self.previous_id = int(previous_id) if previous_id else None
+        self.next_id = int(next_id) if next_id else None
         self.content = content
         self.updated_at = updated_at
         self.attachments = []
@@ -350,8 +351,7 @@ class Version(Model):
             json['previous_id'],
             json['next_id'],
             json['content'],
-            json['updated_at']
-            )
+            json['updated_at'])
 
     def list_attachments(self):
         """Lists attachments of a note version.

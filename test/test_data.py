@@ -18,19 +18,6 @@ notebooks = [
     notebook2
     ]
 
-version_id = 10
-version2_id = 11
-version = {
-    'id': version_id
-    }
-version2 = {
-    'id': version2_id
-    }
-versions = [
-    version,
-    version2
-    ]
-
 tag_id = 42
 tag2_id = 43
 tag_title = 'some_tag'
@@ -57,6 +44,29 @@ note2_id = 5
 note_updated_at = '2014-09-20 19:43:59'
 note2_updated_at = '2014-09-19 19:43:59'
 
+version_id = 10
+version2_id = 11
+version = {
+    'id': version_id,
+    'title': note_title,
+    'previous_id': None,
+    'next_id': version2_id,
+    'content': content,
+    'updated_at': note_updated_at
+    }
+version2 = {
+    'id': version2_id,
+    'title': note_title,
+    'previous_id': version_id,
+    'next_id': None,
+    'content': content,
+    'updated_at': note_updated_at
+    }
+versions = [
+    version,
+    version2
+    ]
+
 attachment_id = 55
 attachment2_id = 56
 attachment_file = 'attached.pdf'
@@ -64,14 +74,14 @@ attachment_mime = 'test/data'
 attachment = {
     'id': attachment_id,
     'filename': attachment_file,
-    'pivot': {'version_id': note_id},
+    'pivot': {'version_id': version_id},
     'mimetype': attachment_mime,
     'updated_at': note_updated_at
     }
 attachment2 = {
     'id': attachment2_id,
     'filename': attachment_file,
-    'pivot': {'version_id': note2_id},
+    'pivot': {'version_id': version2_id},
     'mimetype': attachment_mime,
     'updated_at': note_updated_at
     }

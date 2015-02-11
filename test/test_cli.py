@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
-from .test_data import *
-from ..paperworks.models import Notebook, Note, Tag, Attachment
+from test_data import *
+from paperworks.models import Notebook, Note, Tag, Attachment
 try:
     from unittest.mock import patch
 except ImportError:

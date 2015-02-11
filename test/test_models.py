@@ -1,7 +1,7 @@
 import unittest
 from json import dumps
-from ..paperworks import models
-from .test_data import *
+from paperworks import models
+from test_data import *
 
 try:
     from unittest.mock import patch
@@ -25,20 +25,24 @@ class TestPaperwork(unittest.TestCase):
         pass
 
     @patch('paperworks.wrapper.API.list_note_attachments')
+    @patch('paperworks.wrapper.API.list_note_versions')
     @patch('paperworks.wrapper.API.list_notebook_notes')
     @patch('paperworks.wrapper.API.list_notebooks')
     @patch('paperworks.wrapper.API.list_tags')
     def test_download(self, mocked_list_tags, mocked_list_notebooks,
                       mocked_list_notebook_notes,
+                      mocked_list_note_versions,
                       mocked_list_note_attachments):
         mocked_list_tags.return_value = tags
         mocked_list_notebooks.return_value = [notebook]
         mocked_list_notebook_notes.return_value = notes
+        mocked_list_note_versions.return_value = versions
         mocked_list_note_attachments.return_value = attachments
         self.pw.download()
         self.assertTrue(mocked_list_tags.called)
         self.assertTrue(mocked_list_notebooks.called)
         self.assertTrue(mocked_list_notebook_notes.called)
+        self.assertTrue(mocked_list_note_versions.called)
         self.assertTrue(mocked_list_note_attachments.called)
 
     @patch('paperworks.models.Note.update')

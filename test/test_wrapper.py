@@ -1,9 +1,9 @@
 # License: MIT
 # Author: Nelo Wallus, http://github.com/ntnn
 import unittest
-from ..paperworks import wrapper
+from paperworks import wrapper
 from json import dumps
-from .test_data import *
+from test_data import *
 
 try:
     from unittest.mock import patch

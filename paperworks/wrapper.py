@@ -425,11 +425,9 @@ class API:
             self.host + API_VERSION + API_PATH['attachments'].format(
                 note['notebook_id'],
                 note['id'],
-                0
-                ),
+                0),
             files={'file': open(path, 'rb')},
-            headers=self.headers
-            )
+            headers=self.headers)
 
     def list_tags(self):
         """Returns all tags.
