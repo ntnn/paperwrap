@@ -15,6 +15,9 @@ if str(sys.version[0]) < '3':
 LOGGER = logging.getLogger(__name__)
 
 PW = models.Paperwork(input('Host: '))
+if not PW.authenticated:
+    print('User/password not valid or host not reachable.')
+    sys.exit()
 
 SEP_NOTE_ATTACH = ' to '
 SEP_NOTE_NB = ' in '
@@ -46,10 +49,10 @@ def split(args, splitter):
     if the splitter is in the string. If not None and the string is returned.
     :type args: str
     :type splitter: str
-    :rtype: list
+    :rtype: list or None and str
     """
     if splitter in args:
-        return args.split(splitter)
+        return args.split(splitter, 1)
     else:
         return None, args
 
@@ -245,6 +248,22 @@ exit                                        exit application
 """
           )
 
+
+CMD_DICT = {
+    'update': update,
+    'ls': print_all,
+    'edit': edit,
+    'delete': delete,
+    'move': move,
+    'create': create,
+    'tags': tags,
+    'tag': tag,
+    'tagged': tagged,
+    'help': print_help,
+    'upload': upload
+    }
+
+
 def main():
     """Main function for terminal client.
 
@@ -262,42 +281,19 @@ def main():
     if args.threading:
         models.use_threading = True
 
-    if not PW.authenticated:
-        print('User/password not valid or host not reachable.')
-        sys.exit()
     download()
-
-    cmd_dict = {
-        'update': update,
-        'ls': print_all,
-        'edit': edit,
-        'delete': delete,
-        'move': move,
-        'create': create,
-        'tags': tags,
-        'tag': tag,
-        'tagged': tagged,
-        'help': print_help,
-        'upload': upload
-        }
 
     cmd = input('>')
     while cmd != 'exit':
         LOGGER.info(cmd)
-        if ' ' in cmd:
-            cmd = cmd.split(' ', 1)
-            args = cmd[1]
-            cmd = cmd[0]
-        else:
-            args = None
-        if cmd in cmd_dict.keys():
-            if args:
-                cmd_dict[cmd](args)
-            else:
-                cmd_dict[cmd]()
+        cmd, args = split(cmd, ' ')
+        if cmd and cmd in CMD_DICT:
+            CMD_DICT[cmd](args)
+        elif args in CMD_DICT:
+            CMD_DICT[args]()
         else:
             LOGGER.info('Invalid command')
-            print('{} unknown'.format(cmd))
+            print('{} {} unknown'.format(cmd, args))
         cmd = input('>')
 
 if __name__ == "__main__":
