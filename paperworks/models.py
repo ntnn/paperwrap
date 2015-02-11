@@ -170,7 +170,7 @@ class Notebook(Model):
 
 
 class Note(Model):
-    """Class repesenting a note object."""
+    """Class representing a note object."""
     def __init__(self, title, ident, notebook, content='', updated_at=''):
         """Initializes a note object.
 
@@ -311,7 +311,7 @@ class Note(Model):
 
 
 class Version:
-    """Class repesenting a version of a note."""
+    """Class representing a version of a note."""
     def __init__(self, note, title, ident, previous_id, next_id,
                  content, updated_at):
         """Initializes a version object.
@@ -364,7 +364,7 @@ class Version:
 
 
 class Attachment:
-    """Class repesenting an attachment to a note."""
+    """Class representing an attachment to a note."""
     def __init__(self, note, title, ident, version_id, mimetype,
                  updated_at):
         """Initializes an attachment object.
@@ -420,7 +420,7 @@ class Attachment:
 
 
 class Tag(Model):
-    """Class repesenting a tag."""
+    """Class representing a tag."""
     def __init__(self, title, ident, api, visibility=0):
         """Initializes a tag object.
 
@@ -463,7 +463,7 @@ class Tag(Model):
 
 
 class Paperwork:
-    """Class repesenting the remote paperwork instance."""
+    """Class representing the remote paperwork instance."""
     def __init__(self, host):
         """Initializes local paperwork instance and the api-wrapper.
 
