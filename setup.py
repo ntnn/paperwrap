@@ -5,7 +5,7 @@ import re
 import sys
 
 here = path.abspath(path.dirname(__file__))
-package_name = 'paperworks'
+package_name = 'paperwrap'
 
 with open(path.join(here, 'README.rst'), 'r', encoding='utf-8') as f:
     long_description = f.read()
@@ -24,7 +24,7 @@ if __name__ == "__main__":
             mainpip(['install', '3to2', 'mock', '--user'])
             from lib3to2 import main as three2two
         three2two.main('lib3to2.fixes',
-                       '-n --no-diffs -w paperworks'.split(' '))
+                       '-n --no-diffs -w paperwrap'.split(' '))
 
     setup(
         name=package_name,
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         ],
 
         entry_points={
-            'console_scripts': ['paperworks = paperworks.cli:main']
+            'console_scripts': ['paperwrap = paperwrap.cli:main']
             },
 
         install_requires=[
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             'python-Levenshtein',
             'requests'],
 
-        keywords='paperwork rocks twostairs api wrapper',
+        keywords='paperwork rocks twostairs api wrapper paperwrap',
 
         packages=find_packages(exclude=['test'])
     )

@@ -1,4 +1,4 @@
-"""Terminal client for paperwork.py/paperworks"""
+"""Terminal client for paperwork.py"""
 
 from . import models
 from .utils import fuzzy_find

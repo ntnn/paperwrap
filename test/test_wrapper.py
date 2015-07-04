@@ -1,7 +1,7 @@
 # License: MIT
 # Author: Nelo Wallus, http://github.com/ntnn
 import unittest
-from paperworks import wrapper
+from paperwrap import wrapper
 from json import dumps
 from test_data import *
 
@@ -13,7 +13,7 @@ except ImportError:
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.patcher = patch('paperwrap.wrapper.requests.request')
         self.mocked_request = self.patcher.start()
         temp = ResponseObj(dumps({
             'success': True,
@@ -76,7 +76,7 @@ class TestAPI(unittest.TestCase):
     def test_update_note(self):
         self.request(self.api.update_note, 'note', note)
 
-    @patch('paperworks.wrapper.API.delete_notes')
+    @patch('paperwrap.wrapper.API.delete_notes')
     def test_delete_note(self, mocked_delete_notes):
         self.api.delete_note(note)
         mocked_delete_notes.assert_called_with([note])
@@ -84,7 +84,7 @@ class TestAPI(unittest.TestCase):
     def test_delete_notes(self):
         self.request(self.api.delete_notes, 'notes', notes)
 
-    @patch('paperworks.wrapper.API.move_notes')
+    @patch('paperwrap.wrapper.API.move_notes')
     def test_move_note(self, mocked_move_notes):
         self.api.move_note(note, new_notebook_id)
         mocked_move_notes.assert_called_with([note], new_notebook_id)
@@ -112,7 +112,7 @@ class TestAPI(unittest.TestCase):
         self.request(self.api.delete_note_attachment, 'attachment', note,
                      attachment_id)
 
-    @patch('paperworks.wrapper.requests.post')
+    @patch('paperwrap.wrapper.requests.post')
     @patch('builtins.open', lambda path, mode: path)
     def test_upload_attachment(self, mocked_post):
         self.api.upload_attachment(note, 'some/path/')
