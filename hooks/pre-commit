@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+pandoc --to=rst README.md -o README.rst
+git add README.rst
