@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import unittest
 from test_data import *
-from paperworks.models import Notebook, Note, Tag, Attachment
+from paperwrap.models import Notebook, Note, Tag, Attachment
 try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
 
-patch('paperworks.wrapper.API.test_connection', lambda x: True).start()
+patch('paperwrap.wrapper.API.test_connection', lambda x: True).start()
 patch('builtins.input', lambda x: 'test/uri').start()
-from paperworks import cli
+from paperwrap import cli
 
 
 class TestCli(unittest.TestCase):
@@ -33,12 +33,12 @@ class TestCli(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @patch('paperworks.models.Paperwork.download')
+    @patch('paperwrap.models.Paperwork.download')
     def test_download(self, mocked_download):
         cli.download()
         self.assertTrue(mocked_download.called)
 
-    @patch('paperworks.models.Paperwork.update')
+    @patch('paperwrap.models.Paperwork.update')
     def test_update(self, mocked_update):
         cli.update()
         self.assertTrue(mocked_update.called)
@@ -92,38 +92,38 @@ class TestCli(unittest.TestCase):
         self.assertEqual(note.title, 'note title')
         self.assertEqual(notebook.title, 'notebook title')
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Attachment.delete')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Attachment.delete')
     def test_delete_attachment(self, mocked_delete):
         cli.delete('attached.pdf to note in notebook')
         self.assertTrue(mocked_delete.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Note.delete')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Note.delete')
     def test_delete_note(self, mocked_delete):
         cli.delete('note in notebook')
         self.assertTrue(mocked_delete.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Notebook.delete')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Notebook.delete')
     def test_delete_notebook(self, mocked_delete):
         cli.delete('notebook')
         self.assertTrue(mocked_delete.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Note.move_to')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Note.move_to')
     def test_move(self, mocked_move):
         cli.move('note in notebook to notebook')
         self.assertTrue(mocked_move.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Notebook.create_note')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Notebook.create_note')
     def test_create_note(self, mocked_create):
         cli.create('testnote in notebook')
         self.assertTrue(mocked_create.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Paperwork.create_notebook')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Paperwork.create_notebook')
     def test_create_notebook(self, mocked_create):
         cli.create('testnotebook')
         self.assertTrue(mocked_create.called)
@@ -133,14 +133,14 @@ class TestCli(unittest.TestCase):
         cli.tags()
         self.assertTrue(mocked_print.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Note.add_tags')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Note.add_tags')
     def test_tag_to_note(self, mocked_add_tags):
         cli.tag('note in notebook with tag')
         self.assertTrue(mocked_add_tags.called)
 
-    @patch('paperworks.cli.prompt', lambda x: True)
-    @patch('paperworks.models.Paperwork.add_tag')
+    @patch('paperwrap.cli.prompt', lambda x: True)
+    @patch('paperwrap.models.Paperwork.add_tag')
     def test_tag(self, mocked_add_tag):
         cli.tag('tag01')
         self.assertTrue(mocked_add_tag.called)
@@ -150,7 +150,7 @@ class TestCli(unittest.TestCase):
         cli.tagged('something')
         self.assertTrue(mocked_print.called)
 
-    @patch('paperworks.models.Note.upload_file')
+    @patch('paperwrap.models.Note.upload_file')
     def test_upload(self, mocked_upload):
         cli.upload('testfile to note in notebook')
         self.assertTrue(mocked_upload.called_with('testfile'))

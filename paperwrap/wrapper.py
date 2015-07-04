@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 __version__ = '0.14.2'
 API_VERSION = '/api/v1/'
-DEFAULT_AGENT = 'paperwork.py api wrapper v{}'.format(__version__)
+DEFAULT_AGENT = 'paperwrap api wrapper v{}'.format(__version__)
 
 API_PATH = {
     'notebooks':      'notebooks',
@@ -83,19 +83,25 @@ class API:
         :rtype: dict or None
         """
         uri = self.host + API_VERSION + API_PATH[keyword].format(*ids)
+
         if data:
             self.headers['Content-Type'] = 'application/json'
             data = json.dumps(data)
+
         LOGGER.info(
             '{} request to {}:\ndata: {}\nheaders: {}'.format(
                 method, uri, data, self.headers))
+
         res = requests.request(
             method,
             uri,
             data=data,
-            headers=self.headers).text
+            headers=self.headers,
+            verify=False).text
+
         if keyword == 'attachment_raw':
             return res
+
         json_res = json.loads(res)
         if json_res['success'] is False:
             LOGGER.error('Unsuccessful request: {}'.format(

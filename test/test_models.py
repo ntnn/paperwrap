@@ -1,6 +1,6 @@
 import unittest
 from json import dumps
-from paperworks import models
+from paperwrap import models
 from test_data import *
 
 try:
@@ -11,7 +11,7 @@ except ImportError:
 
 class TestPaperwork(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.patcher = patch('paperwrap.wrapper.requests.request')
         self.mocked_request = self.patcher.start()
         temp = ResponseObj(dumps({
             'success': True,
@@ -24,11 +24,11 @@ class TestPaperwork(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @patch('paperworks.wrapper.API.list_note_attachments')
-    @patch('paperworks.wrapper.API.list_note_versions')
-    @patch('paperworks.wrapper.API.list_notebook_notes')
-    @patch('paperworks.wrapper.API.list_notebooks')
-    @patch('paperworks.wrapper.API.list_tags')
+    @patch('paperwrap.wrapper.API.list_note_attachments')
+    @patch('paperwrap.wrapper.API.list_note_versions')
+    @patch('paperwrap.wrapper.API.list_notebook_notes')
+    @patch('paperwrap.wrapper.API.list_notebooks')
+    @patch('paperwrap.wrapper.API.list_tags')
     def test_download(self, mocked_list_tags, mocked_list_notebooks,
                       mocked_list_notebook_notes,
                       mocked_list_note_versions,
@@ -45,8 +45,8 @@ class TestPaperwork(unittest.TestCase):
         self.assertTrue(mocked_list_note_versions.called)
         self.assertTrue(mocked_list_note_attachments.called)
 
-    @patch('paperworks.models.Note.update')
-    @patch('paperworks.models.Notebook.update')
+    @patch('paperwrap.models.Note.update')
+    @patch('paperwrap.models.Notebook.update')
     def test_update(self, mocked_update_notebook, mocked_update_note):
         parsed_notebook = models.Notebook.from_json(self.api, notebook)
         self.pw.add_notebook(parsed_notebook)
@@ -72,7 +72,7 @@ class TestPaperwork(unittest.TestCase):
 
 class TestModel(unittest.TestCase):
     def setUp(self):
-        self.patcher = patch('paperworks.wrapper.requests.request')
+        self.patcher = patch('paperwrap.wrapper.requests.request')
         self.mocked_request = self.patcher.start()
         temp = ResponseObj(dumps({
             'success': True,
@@ -112,19 +112,19 @@ class TestNotebook(TestModel):
         parsed_notebook = models.Notebook.from_json(self.api, notebook)
         self.from_json_test(parsed_notebook, notebook_title, notebook_id)
 
-    @patch('paperworks.wrapper.API.create_notebook')
+    @patch('paperwrap.wrapper.API.create_notebook')
     def test_create(self, mocked_create_notebook):
         models.Notebook.create(self.api, notebook_title)
         mocked_create_notebook.assert_called_with(notebook_title)
 
-    @patch('paperworks.wrapper.API.delete_notebook')
+    @patch('paperwrap.wrapper.API.delete_notebook')
     def test_delete(self, mocked_delete):
         self.nb.delete()
         mocked_delete.assert_called_with(notebook_id)
 
-    @patch('paperworks.wrapper.API.create_notebook')
-    @patch('paperworks.wrapper.API.get_notebook')
-    @patch('paperworks.wrapper.API.update_notebook')
+    @patch('paperwrap.wrapper.API.create_notebook')
+    @patch('paperwrap.wrapper.API.get_notebook')
+    @patch('paperwrap.wrapper.API.update_notebook')
     def test_update_updates_remote(self, mocked_update, mocked_get,
                                    mocked_create):
         mocked_get.return_value = note
@@ -139,7 +139,7 @@ class TestNotebook(TestModel):
         notes = self.nb.get_notes()
         notes[0] = self.note
 
-    @patch('paperworks.wrapper.API.create_note')
+    @patch('paperwrap.wrapper.API.create_note')
     def test_create_note(self, mocked_create_note):
         self.nb.create_note(note_title)
         mocked_create_note.assert_called_with(self.nb.ident, note_title)
@@ -149,7 +149,7 @@ class TestNotebook(TestModel):
         self.assertTrue(self.note in self.nb.notes.values())
         self.assertEqual(self.note.notebook, self.nb)
 
-    @patch('paperworks.wrapper.API.list_notebook_notes')
+    @patch('paperwrap.wrapper.API.list_notebook_notes')
     def test_download(self, mocked_list_notebook_notes):
         mocked_list_notebook_notes.return_value = []
         self.nb.download([models.Tag.from_json(self.api, tag)])
@@ -181,27 +181,27 @@ class TestNote(TestModel):
         self.assertEqual(self.parsed_note.content, content)
         self.from_json_test(self.parsed_note, note_title, note_id)
 
-    @patch('paperworks.wrapper.API.create_note')
+    @patch('paperwrap.wrapper.API.create_note')
     def test_create(self, mocked_create_note):
         mocked_create_note.return_value = note
         models.Note.create(note_title, self.notebook)
         mocked_create_note.assert_called_with(notebook_id, note_title)
 
-    @patch('paperworks.wrapper.API.move_note')
+    @patch('paperwrap.wrapper.API.move_note')
     def test_move_to(self, mocked_move):
         self.parsed_note.move_to(
             models.Notebook.from_json(
                 self.api, notebook2))
         mocked_move.assert_called_with(self.parsed_note_json, notebook2_id)
 
-    @patch('paperworks.wrapper.API.delete_note')
+    @patch('paperwrap.wrapper.API.delete_note')
     def test_delete(self, mocked_delete):
         self.parsed_note.delete()
         mocked_delete.assert_called_with(self.parsed_note.to_json())
 
-    @patch('paperworks.wrapper.API.create_note')
-    @patch('paperworks.wrapper.API.get_note')
-    @patch('paperworks.wrapper.API.update_note')
+    @patch('paperwrap.wrapper.API.create_note')
+    @patch('paperwrap.wrapper.API.get_note')
+    @patch('paperwrap.wrapper.API.update_note')
     def test_update_remote(self, mocked_update, mocked_get, mocked_create):
         mocked_get.return_value = note
         self.parsed_note.updated_at = '2014-09-22 19:43:59'
@@ -212,9 +212,9 @@ class TestNote(TestModel):
             self.parsed_note.ident)
         mocked_update.assert_called_with(self.parsed_note.to_json())
 
-    @patch('paperworks.wrapper.API.create_note')
-    @patch('paperworks.wrapper.API.get_note')
-    @patch('paperworks.wrapper.API.update_note')
+    @patch('paperwrap.wrapper.API.create_note')
+    @patch('paperwrap.wrapper.API.get_note')
+    @patch('paperwrap.wrapper.API.update_note')
     def test_update_local(self, mocked_update, mocked_get, mocked_create):
         mocked_get.return_value = note
         self.parsed_note.updated_at = '2014-09-14 19:43:59'

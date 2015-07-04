@@ -31,7 +31,7 @@ class Model:
         :type ident: integer
         :type api: wrapper.api
         """
-        self.ident = int(ident)
+        self.ident = ident
         self.title = title
         self.api = api
 
@@ -165,7 +165,7 @@ class Notebook(Model):
         for note_json in notes_json:
             note = Note.from_json(self, note_json)
             self.add_note(note)
-            note.add_tags([tags[int(tag['id'])] for tag in note_json['tags']])
+            note.add_tags([tags[tag['id']] for tag in note_json['tags']])
             note.list_versions()
             note.list_attachments()
 
@@ -206,6 +206,7 @@ class Note(Model):
         :type json: dict
         :type notebook: Notebook
         """
+        LOGGER.info(json)
         return cls(
             json['title'],
             json['id'],
