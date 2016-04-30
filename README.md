@@ -16,3 +16,6 @@ PyPI entry: [paperwrap](https://pypi.python.org/pypi/paperwrap/)
 `paperwrap` connects to the remote host and provides a command line interface to manage the notes. 
 The credentials are read with requests from the `.netrc` file. 
 
+Mirrors:
+* https://github.com/ntnn/paperwrap
+* https://gitlab.com/ntnn/paperwrap
